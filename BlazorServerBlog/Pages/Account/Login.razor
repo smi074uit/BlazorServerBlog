@@ -1,0 +1,59 @@
+﻿@page "/account/login"
+@using BlazorServerBlog.Services
+@inject IApiHelper Api
+@inject NavigationManager NavigationManager
+
+<div class="card">
+	<h4 class="card-header">Login</h4>
+	@if (!string.IsNullOrEmpty(error))
+	{
+		<h2>@error</h2>
+	}
+
+	<div class="card-body">
+		<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+			<DataAnnotationsValidator />
+			<div class="form-group">
+				<label>Username</label>
+				<InputText @bind-Value="model.Username" class="form-control" />
+				<ValidationMessage For="@(() => model.Username)" />
+			</div>
+			<div class="form-group">
+				<label>Password</label>
+				<InputText @bind-Value="model.Password" type="password" class="form-control" />
+				<ValidationMessage For="@(() => model.Password)" />
+			</div>
+			<button disabled="@loading" class="btn btn-primary">
+				@if (loading) 
+				{
+					<span class="spinner-border spinner-border-sm mr-1"></span>
+				}
+				Login
+			</button>
+			<NavLink href="account/register" class="btn btn-link">Register</NavLink>
+		</EditForm>
+	</div>
+</div>
+
+@code {
+	private SharedModels.Entities.Account.UserDTO model = new();
+	private bool loading;
+	private string error = "";
+
+	private async void OnValidSubmit()
+	{
+
+		loading = true;
+		
+		bool success = await Api.login(model);
+		if (success)
+		{
+			NavigationManager.NavigateTo("/home");
+		}
+		else
+		{
+			error = "Login failed";
+			loading = false;
+		}
+	}
+}

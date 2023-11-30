@@ -1,0 +1,35 @@
+﻿@page "/account/register"
+@using SharedModels.Entities.Account
+
+<div class="card">
+	<h4 class="card-header">Register</h4>
+	<div class="card-body">
+		<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+			<DataAnnotationsValidator />
+			<div class="form-group">
+				<label>Username</label>
+				<InputText @bind-Value="model.Username" class="form-control" />
+				<ValidationMessage For="@(() => model.Username)" />
+			</div>
+			<div class="form-group">
+				<label>Password</label>
+				<InputText @bind-Value="model.Passwd" type="password" class="form-control" />
+				<ValidationMessage For="@(() => model.Passwd)" />
+			</div>
+			<button disabled="@loading" class="btn btn-primary">
+				@if (loading) 
+				{
+					<span class="spinner-border spinner-border-sm mr-1"></span>
+				}
+				Register
+			</button>
+			<NavLink href="account/login" class="btn btn-link">Cancel</NavLink>
+		</EditForm>
+	</div>
+</div>
+
+@code {
+	public User model = new();
+	public bool loading = true;
+	public void OnValidSubmit(){}
+}
