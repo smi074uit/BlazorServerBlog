@@ -22,14 +22,22 @@ namespace WebAPIBlog.Repositories
 		private readonly ApplicationDbContext _db;
 		private readonly SignInManager<IdentityUser> _signInManager;
 		private readonly UserManager<IdentityUser> _userManager;
+		private readonly RoleManager<IdentityRole> _roleManager;
 		private readonly IConfiguration _conf;
 
-		public AccountsRepository(SignInManager<IdentityUser> _manager, UserManager<IdentityUser> _userManager, ApplicationDbContext _db, IConfiguration conf)
+		public AccountsRepository(
+			SignInManager<IdentityUser> _manager,
+			UserManager<IdentityUser> _userManager,
+			RoleManager<IdentityRole> _roleManager,
+			ApplicationDbContext _db,
+			IConfiguration conf
+			)
 		{
 			this._db = _db;
 			_conf = conf;
 			this._signInManager = _manager;
 			this._userManager = _userManager;
+			this._roleManager = _roleManager;
 		}
 
 		/// <summary>
@@ -135,19 +143,25 @@ namespace WebAPIBlog.Repositories
 			{
 				return null;
 			}
+
+			if (!await _roleManager.RoleExistsAsync("User"))
+			{
+				await _roleManager.CreateAsync(new IdentityRole(){Name = "User"});
+			}
+
 			await _userManager.AddToRoleAsync(newUser, "User");
 			var registeredUser = await _userManager.FindByNameAsync(u.Username);
 			
 			if (registeredUser == null)
 				return (null);
 
-			var role = await _userManager.GetRolesAsync(registeredUser);
+			var userRole = await _userManager.GetRolesAsync(registeredUser);
 			User user = new()
 			{
 				Id = registeredUser.Id,
 				Username = registeredUser.UserName,
 				Passwd = registeredUser.PasswordHash,
-				Role = role.FirstOrDefault()
+				Role = userRole.FirstOrDefault()
 			};
 
 			return user;

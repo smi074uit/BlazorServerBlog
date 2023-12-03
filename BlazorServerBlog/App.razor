@@ -1,12 +1,19 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
-    </NotFound>
+﻿<CascadingAuthenticationState>
+<Router AppAssembly="@typeof(Program).Assembly" PreferExactMatches="@true">
+	<Found Context="routeData">
+		<AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" >
+			<Authorizing>Please Wait, we are authorizing you.</Authorizing>
+			<NotAuthorized><h1>Oops, You do not have Access</h1><p>The page or component you are trying to reach requires you to have more permissions than you currently do.</p></NotAuthorized>
+		</AuthorizeRouteView>
+
+	</Found>
+	<NotFound>
+		<CascadingAuthenticationState>
+			<LayoutView Layout="@typeof(MainLayout)">
+				<p>Sorry, there's nothing at this address.</p>
+			</LayoutView>
+		</CascadingAuthenticationState>
+	</NotFound>
 </Router>
+
+</CascadingAuthenticationState>

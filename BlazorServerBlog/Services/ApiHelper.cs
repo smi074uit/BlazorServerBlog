@@ -27,32 +27,6 @@ namespace BlazorServerBlog.Services
 		}
 
 
-		public async Task<bool> login(UserDTO user)
-		{
-			//UserDTO user = new()
-			//{ Username = username, Password = password };
-
-			var response = PostData(user, "Account/verifyLogin");
-
-			if (!response.IsSuccessStatusCode)
-			{
-				return false;
-			}
-
-			User result = await response.Content.ReadFromJsonAsync<User>();
-			
-			var responseContent = response.Content.ReadAsStringAsync().Result;
-			var handler = new JwtSecurityTokenHandler();
-
-
-			JwtSecurityToken jwt = new JwtSecurityToken(result.Token);
-
-			client.DefaultRequestHeaders.Clear();
-			client.DefaultRequestHeaders.Add("Authorization", $"Bearer {result.Token}");
-
-			return true;
-		}
-
 		public void SetClientHeaders(string token)
 		{
 			var handler = new JwtSecurityTokenHandler();
@@ -66,8 +40,8 @@ namespace BlazorServerBlog.Services
 		public void BlankClientHeaders()
 		{
 			client.DefaultRequestHeaders.Clear();
-
-		}
+            client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+        }
 
 		public void RefreshLogin()
 		{

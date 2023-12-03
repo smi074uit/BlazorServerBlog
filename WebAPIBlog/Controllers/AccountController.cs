@@ -69,6 +69,11 @@ namespace WebAPIBlog.Controllers
 
 			User res = await _repo.AddUser(registerRequest);
 
+			if (res == null)
+			{
+				return BadRequest();
+			}
+
 
 			return Ok();
 		}

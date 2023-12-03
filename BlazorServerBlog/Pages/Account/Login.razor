@@ -1,6 +1,6 @@
 ﻿@page "/account/login"
 @using BlazorServerBlog.Services
-@inject IApiHelper Api
+@inject IAuthenticationService Api
 @inject NavigationManager NavigationManager
 
 <div class="card">
@@ -48,7 +48,7 @@
 		bool success = await Api.login(model);
 		if (success)
 		{
-			NavigationManager.NavigateTo("/home");
+			NavigationManager.NavigateTo("/");
 		}
 		else
 		{

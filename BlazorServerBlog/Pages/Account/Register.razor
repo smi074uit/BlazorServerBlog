@@ -1,23 +1,30 @@
 ﻿@page "/account/register"
 @using SharedModels.Entities.Account
+@using BlazorServerBlog.Services
+@inject IAuthenticationService Api
+@inject NavigationManager NavigationManager
 
 <div class="card">
+	@if (!string.IsNullOrEmpty(error))
+	{
+		<h2>@error</h2>
+	}
 	<h4 class="card-header">Register</h4>
 	<div class="card-body">
 		<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
-			<DataAnnotationsValidator />
+			<DataAnnotationsValidator/>
 			<div class="form-group">
 				<label>Username</label>
-				<InputText @bind-Value="model.Username" class="form-control" />
-				<ValidationMessage For="@(() => model.Username)" />
+				<InputText @bind-Value="model.Username" class="form-control"/>
+				<ValidationMessage For="@(() => model.Username)"/>
 			</div>
 			<div class="form-group">
 				<label>Password</label>
-				<InputText @bind-Value="model.Passwd" type="password" class="form-control" />
-				<ValidationMessage For="@(() => model.Passwd)" />
+				<InputText @bind-Value="model.Password" type="password" class="form-control"/>
+				<ValidationMessage For="@(() => model.Password)"/>
 			</div>
 			<button disabled="@loading" class="btn btn-primary">
-				@if (loading) 
+				@if (loading)
 				{
 					<span class="spinner-border spinner-border-sm mr-1"></span>
 				}
@@ -29,7 +36,23 @@
 </div>
 
 @code {
-	public User model = new();
-	public bool loading = true;
-	public void OnValidSubmit(){}
+	public RegisterRequest model = new();
+	public bool loading;
+	private string error = "";
+
+	public void OnValidSubmit()
+	{
+		loading = true;
+
+		bool success = Api.register(model);
+		if (success)
+		{
+			NavigationManager.NavigateTo("/");
+		}
+		else
+		{
+			error = "Registration failed";
+			loading = false;
+		}
+	}
 }

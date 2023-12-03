@@ -18,7 +18,8 @@ builder.Services.AddTransient<IAccountsRepository, AccountsRepository>();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDefaultIdentity<IdentityUser>()
 	.AddRoles<IdentityRole>()
-	.AddEntityFrameworkStores<ApplicationDbContext>();
+	.AddEntityFrameworkStores<ApplicationDbContext>()
+	.AddRoleManager<RoleManager<IdentityRole>>();
 
 
 //builder.Services.AddIdentity<IdentityUser, IdentityRole>()

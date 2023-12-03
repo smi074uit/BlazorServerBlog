@@ -4,7 +4,6 @@ namespace BlazorServerBlog.Services;
 
 public interface IApiHelper
 {
-	public Task<bool> login(UserDTO user);
 	void SetClientHeaders(string token);
 	void BlankClientHeaders();
 	void RefreshLogin();
