@@ -24,15 +24,16 @@ namespace WebAPIBlog.Controllers
 		// GET: api/Blog/GetAll
 		[AllowAnonymous]
 		[HttpGet("GetAll")]
-		public async Task<IEnumerable<Blog>> GetBlogs()
+		public async Task<ActionResult<IEnumerable<Blog>>> GetBlogs()
 		{
-			return await _repository.GetAll();
+			IEnumerable<Blog> res = await _repository.GetAll();
+			return Ok(res);
 		}
 
 		// GET: api/Blog/GetBlogViewModel/{blogId}
 		[AllowAnonymous]
 		[HttpGet("GetBlogViewModel/{blogId:int}")]
-		public async Task<BlogViewModel> GetBlogEntries(int blogId)
+		public async Task<ActionResult<BlogViewModel>> GetBlogEntries(int blogId)
 		{
 			Blog blog = await _repository.GetBlogById(blogId);
 			List<BlogEntry> entries = await _repository.GetBlogEntriesByBlogId(blogId);
@@ -45,12 +46,12 @@ namespace WebAPIBlog.Controllers
 				Comments = comments
 			};
 
-			return viewData;
+			return Ok(viewData);
 		}
 
 		// POST: api/Blog/CreateBlog
 		[HttpPost("CreateBlog")]
-		public async Task<IActionResult> CreateBlog([FromBody] BlogDTO blog)
+		public async Task<ActionResult<int>> CreateBlog([FromBody] BlogDTO blog)
 		{
 			string userID = GetUserIdFromLoggedInUser();
 
@@ -58,12 +59,12 @@ namespace WebAPIBlog.Controllers
 
 			Blog newBlog = await _repository.GetBlogByUser(userID);
 
-			return CreatedAtAction("Get", new { id = newBlog.BlogId }, newBlog);
+			return Ok(newBlog.BlogId);
 		}
 
 		// PUT: api/Blog/UpdateBlog
 		[HttpPut("UpdateBlog")]
-		public async Task<IActionResult> UpdateBlog([FromBody] BlogDTO blogDTO)
+		public async Task<ActionResult<Blog>> UpdateBlog([FromBody] BlogDTO blogDTO)
 		{
 			string userID = GetUserIdFromLoggedInUser();
 
@@ -79,7 +80,7 @@ namespace WebAPIBlog.Controllers
 
 		// POST: api/Blog/ToggleLock
 		[HttpPost("ToggleLock")]
-		public async Task<IActionResult> ToggleBlogLock()
+		public async Task<ActionResult> ToggleBlogLock()
 		{
 
 			string userID = GetUserIdFromLoggedInUser();
@@ -92,7 +93,7 @@ namespace WebAPIBlog.Controllers
 		private string GetUserIdFromLoggedInUser()
 		{
 			ClaimsIdentity identity = HttpContext.User.Identity as ClaimsIdentity;
-			return identity.Claims.FirstOrDefault(x => x.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value; //"NameIdentifier").Value;
+			return identity.Claims.FirstOrDefault(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value; //"NameIdentifier").Value;
 		}
 	
 	}

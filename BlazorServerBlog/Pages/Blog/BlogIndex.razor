@@ -1,0 +1,76 @@
+﻿@page "/"
+@inject NavigationManager NavigationManager
+@inject IBlogService BlogService
+
+<h1>Index</h1>
+
+<p>
+	<a asp-action="Create">Opprett ny Blogg</a>
+</p>
+
+@if (loading == false)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    <p>BlogId</p>
+                </th>
+                <th>
+                    <p>BlogTitle</p>
+                </th>
+                <th>
+                    <p>Description</p>
+                </th>
+                <th>
+                    <p>Locked</p>
+                </th>
+                <th>
+                    <p>UserName</p>
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Blog b in Model)
+            {
+                <tr>
+                    <td>
+                        @b.BlogId
+                    </td>
+                    <td>
+                        @b.BlogTitle
+                    </td>
+                    <td>
+                        @b.Description
+                    </td>
+                    <td>
+                        @b.Locked
+                    </td>
+                    <td>
+                        @b.Owner.UserName
+                    </td>
+                    <td>
+                        <a href="" onclick="@(()=>ViewBlog(b.BlogId))">View Blog</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    IEnumerable<Blog> Model;
+    bool loading = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Model = await BlogService.GetBlogs();
+        loading = false;
+    }
+
+    public void ViewBlog(int BlogId)
+    {
+        NavigationManager.NavigateTo("/ViewBlog/" + BlogId.ToString());
+    }
+}

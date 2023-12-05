@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorServerBlog", "BlazorServerBlog\BlazorServerBlog.csproj", "{08126106-6211-43C1-B967-A32878983D76}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorServerBlog", "BlazorServerBlog\BlazorServerBlog.csproj", "{08126106-6211-43C1-B967-A32878983D76}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAPIBlog", "WebAPIBlog\WebAPIBlog.csproj", "{A379F93C-AFA8-4F09-883D-4E4E17F6E823}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAPIBlog", "WebAPIBlog\WebAPIBlog.csproj", "{A379F93C-AFA8-4F09-883D-4E4E17F6E823}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedModels", "SharedModels\SharedModels.csproj", "{629B760C-3414-47ED-8F99-3792845D8C89}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedModels", "SharedModels\SharedModels.csproj", "{629B760C-3414-47ED-8F99-3792845D8C89}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

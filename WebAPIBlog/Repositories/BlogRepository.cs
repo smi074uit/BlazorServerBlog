@@ -75,7 +75,7 @@ namespace WebAPIBlog.Repositories
 
 		public async Task<Blog> GetBlogById(int blogId)
 		{
-			Blog blog = _db.Blog.Find(blogId);
+			Blog blog = _db.Blog.Include(p => p.Owner).FirstOrDefault(x => x.BlogId == blogId);
 			return blog;
 		}
 

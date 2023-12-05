@@ -19,6 +19,8 @@ builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
 
 builder.Services.AddSingleton<IApiHelper, ApiHelper>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddSingleton<IBlogService, BlogService>();
+builder.Services.AddSingleton<IBlogEntryService, BlogEntryService>();
 
 var app = builder.Build();
 

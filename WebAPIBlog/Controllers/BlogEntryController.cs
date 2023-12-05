@@ -23,7 +23,7 @@ namespace WebAPIBlog.Controllers
 
 		// POST: api/BlogEntry/CreateEntry
 		[HttpPost("CreateEntry")]
-		public async Task<IActionResult> CreateBlogEntry([FromBody] BlogEntryDTO entryDTO)
+		public async Task<ActionResult<int>> CreateBlogEntry([FromBody] BlogEntryDTO entryDTO)
 		{
 			string userID = GetUserIdFromLoggedInUser();
 
@@ -42,12 +42,12 @@ namespace WebAPIBlog.Controllers
 			};
 
 			BlogEntry newEntry = await _repository.AddBlogEntry(entryToSave);
-			return CreatedAtAction("Get", new { id = newEntry.BlogEntryId }, newEntry);
+			return Ok(newEntry.BlogEntryId);
 		}
 
 		// POST: api/BlogEntry/CreateComment
 		[HttpPost("CreateComment")]
-		public async Task<IActionResult> CreateComment([FromBody] CommentDTO cDTO)
+		public async Task<ActionResult<int>> CreateComment([FromBody] CommentDTO cDTO)
 		{
 			string userID = GetUserIdFromLoggedInUser();
 
@@ -61,34 +61,40 @@ namespace WebAPIBlog.Controllers
 
 			Comment newC = await _repository.AddComment(cDTO, userID);
 
-			return CreatedAtAction("Get", new { id = newC.CommentId }, newC);
+			return Ok(newC.CommentId);
 		}
 
 		// GET: api/BlogEntry/GetEntry/{entryId}
 		[HttpGet("GetEntry/{entryId:int}")]
-		public async Task<BlogEntry> GetEntry([FromRoute] int entryId)
+		public async Task<ActionResult<BlogEntry>> GetEntry([FromRoute] int entryId)
 		{
 			BlogEntry entry = await _repository.GetBlogEntryById(entryId);
 
-			return entry;
+			return Ok(entry);
 		}
 
 		// GET: api/BlogEntry/GetComment/{commentId}
 		[HttpGet("GetComment/{commentId:int}")]
-		public async Task<Comment> GetComment([FromRoute] int commentId)
+		public async Task<ActionResult<Comment>> GetComment([FromRoute] int commentId)
 		{
 			Comment c = await _repository.GetCommentById(commentId);
 
-			return c;
+			return Ok(c);
 		}
 
-		// PUT: api/BlogEntry/UpdateEntry/{entryId}
-		[HttpPut("UpdateEntry/{entryId}")]
-		public async Task<IActionResult> UpdateEntry([FromBody] BlogEntryDTO entryDTO, [FromRoute] int entryId)
+		// PUT: api/BlogEntry/UpdateEntry
+		[HttpPut("UpdateEntry")]
+		public async Task<ActionResult> UpdateEntry([FromBody] BlogEntry entry)
 		{
-			BlogEntry entry = await _repository.GetBlogEntryById(entryId);
+			
+			BlogEntry oldEntry = await _repository.GetBlogEntryById(entry.BlogEntryId);
 
-			IdentityUser owner = await _repository.GetBlogOwner(entry.BlogId);
+			if(oldEntry is null)
+			{
+				return BadRequest("Entry does not exist");
+			}
+
+			IdentityUser owner = await _repository.GetBlogOwner(oldEntry.BlogId);
 			string userID = GetUserIdFromLoggedInUser();
 
 			if (!(owner.Id == userID))
@@ -96,40 +102,29 @@ namespace WebAPIBlog.Controllers
 				return BadRequest("UserID does not match");
 			}
 
-			if(!(entry.BlogId == entryDTO.BlogId))
-			{
-				return BadRequest("BlogID does not match");
-			}
-
-
-			entry.EntryTitle = entryDTO.EntryTitle;
-			entry.EntryBody = entryDTO.EntryBody;
-
 			await _repository.UpdateBlogEntry(entry);
 
 			return Ok();
 		}
 
-		// PUT: api/BlogEntry/UpdateComment/{commentId}
-		[HttpPut("UpdateComment/{commentId}")]
-		public async Task<IActionResult> UpdateComment([FromBody] CommentDTO cDTO, [FromRoute] int commentId)
+		// PUT: api/BlogEntry/UpdateComment
+		[HttpPut("UpdateComment")]
+		public async Task<ActionResult> UpdateComment([FromBody] Comment c)
 		{
-			Comment c = await _repository.GetCommentById(commentId);
+			Comment oldC = await _repository.GetCommentById(c.CommentId);
+
+			if (oldC is null)
+			{
+				return BadRequest("Comment does not exist");
+			}
 
 			string userID = GetUserIdFromLoggedInUser();
 
-			if (!(c.OwnerId == userID))
+			if (!(oldC.OwnerId == userID))
 			{
 				return BadRequest("UserID does not match");
 			}
 
-			if (!(c.EntryId == cDTO.EntryId))
-			{
-				return BadRequest("EntryID does not match");
-			}
-
-
-			c.CommentBody = cDTO.CommentBody;
 			await _repository.UpdateComment(c);
 
 			return Ok();
@@ -137,7 +132,7 @@ namespace WebAPIBlog.Controllers
 
 		// DELETE: api/BlogEntry/DeleteEntry/{entryId}
 		[HttpDelete("DeleteEntry/{entryId}")]
-		public async Task<IActionResult> DeleteEntry([FromRoute] int entryId)
+		public async Task<ActionResult> DeleteEntry([FromRoute] int entryId)
 		{
 			BlogEntry entry = await _repository.GetBlogEntryById(entryId);
 
@@ -151,12 +146,12 @@ namespace WebAPIBlog.Controllers
 
 			await _repository.DeleteBlogEntryById(entryId);
 
-			return Ok(entry);
+			return Ok();
 		}
 
 		// DELETE: api/BlogEntry/DeleteComment/{commentId}
 		[HttpDelete("DeleteComment/{commentId}")]
-		public async Task<IActionResult> DeleteComment([FromRoute] int commentId)
+		public async Task<ActionResult> DeleteComment([FromRoute] int commentId)
 		{
 			Comment c = await _repository.GetCommentById(commentId);
 
@@ -169,13 +164,13 @@ namespace WebAPIBlog.Controllers
 
 			await _repository.DeleteCommentById(commentId);
 
-			return Ok(c);
+			return Ok();
 		}
 
 		private string GetUserIdFromLoggedInUser()
 		{
 			ClaimsIdentity identity = HttpContext.User.Identity as ClaimsIdentity;
-			return identity.Claims.FirstOrDefault(x => x.Type == "http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value; //"NameIdentifier").Value;
+			return identity.Claims.FirstOrDefault(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value; //"NameIdentifier").Value;
 		}
 	}
 }

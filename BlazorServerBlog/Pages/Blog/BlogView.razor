@@ -1,0 +1,165 @@
+﻿@page "/ViewBlog/{blogIdinput}"
+@inject NavigationManager NavigationManager
+@inject IAuthenticationService AuthService
+@inject IBlogService BlogService
+
+
+<h1>IndexBlogEntry</h1>
+
+@if (!loading)
+{
+
+	@if (Model.Blog.Locked)
+	{
+		<h2>Bloggen er låst for kommentarer og innlegg.</h2>
+	}
+
+	@if (Model.Blog.Owner.UserName == loggedInUserName)
+	{
+		<p>
+			<a href="" onclick="@(()=>CreateBlogEntry())">Ny Blog Post</a>
+		</p>
+		@if (Model.Blog.Locked)
+		{
+			<p>Bloggen er låst. Ønsker du å åpne for innlegg og kommentarer?</p>
+		}
+		@if (!Model.Blog.Locked)
+		{
+			<p>Bloggen er åpen for innlegg og kommentarer. Ønsker du å låse den?</p>
+		}
+		<p>
+			<a href="" onclick="@(()=>ToggleBlogLock())" @onclick:preventDefault>Lås/Avlås</a>
+		</p>
+	}
+
+	<p>
+		<a href="/">Back</a>
+	</p>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>
+					<p>EntryTitle</p>
+				</th>
+				<th>
+					<p>EntryBody</p>
+				</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (BlogEntry e in Model.BlogEntries)
+			{
+				<tr>
+					<td>
+						@e.EntryTitle
+					</td>
+					<td>
+						@e.EntryBody
+					</td>
+					<td>
+						@if (!Model.Blog.Locked)
+						{
+							@if (!(loggedInUserName == ""))
+							{
+								@if (Model.Blog.Owner.UserName == loggedInUserName)
+								{
+									<br />
+									<a href="" onclick="@(()=>EditBlogEntry(e.BlogEntryId))">Rediger Post</a>
+									<br />
+									<a href="" onclick="@(()=>DeleteBlogEntry(e.BlogEntryId))">Slett Post</a>
+								}
+								<br />
+								<a href="" onclick="@(()=>CreateComment(e.BlogEntryId))">Legg til kommentar</a>
+							}
+						}
+					</td>
+				</tr>
+
+				@foreach (Comment c in Model.Comments)
+				{
+					@if (c.EntryId == e.BlogEntryId)
+					{
+						<tr>
+							<td>
+								<div class="CommentBox">
+									@c.Owner.UserName
+									<br />
+									<br />
+									@c.CommentBody
+									@if (!Model.Blog.Locked)
+									{
+										@if (c.Owner.UserName == loggedInUserName)
+										{
+											<br />
+											<a href="" onclick="@(()=>EditComment(c.CommentId))">Rediger Kommentar</a>
+											<br />
+											<a href="" onclick="@(()=>DeleteComment(c.CommentId))">Slett Kommentar</a>
+										}
+									}
+								</div>
+							</td>
+						</tr>
+					}
+
+				}
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	[Parameter]
+	public string blogIdinput { get; set; }
+	public int blogId { get; set; }
+
+	BlogViewModel Model;
+	bool loading = true;
+	string loggedInUserName;
+
+	protected async override Task OnInitializedAsync()
+	{
+		blogId = Int32.Parse(blogIdinput);
+		loggedInUserName = await AuthService.GetUserNameFromToken();
+		Model = await BlogService.GetBlogEntries(blogId);
+		loading = false;
+	}
+
+	public void CreateBlogEntry()
+	{
+		NavigationManager.NavigateTo("/NewEntry/" + Model.Blog.BlogId.ToString());
+	}
+
+	public void ToggleBlogLock()
+	{
+		if (BlogService.ToggleBlogLock())
+		{
+			Model.Blog.Locked = !Model.Blog.Locked;
+		}
+	}
+
+	public void EditBlogEntry(int entryId)
+	{
+		NavigationManager.NavigateTo("/EditEntry/" + entryId.ToString());
+	}
+
+	public void DeleteBlogEntry(int entryId)
+	{
+		NavigationManager.NavigateTo("/DeleteEntry/" + entryId.ToString());
+	}
+
+	public void CreateComment(int entryId)
+	{
+		NavigationManager.NavigateTo("/CreateComment/" + entryId.ToString());
+	}
+
+	public void EditComment(int commentId)
+	{
+		NavigationManager.NavigateTo("/EditComment/" + commentId.ToString());
+	}
+
+	public void DeleteComment(int commentId)
+	{
+		NavigationManager.NavigateTo("/DeleteComment/" + commentId.ToString());
+	}
+}

@@ -65,5 +65,19 @@ namespace BlazorServerBlog.Services
 
 			await ((AuthStateProvider)authStateProvider).NotifyUserLogout();
 		}
+
+        public async Task<string> GetUserNameFromToken()
+        {
+			var token = await localStorage.GetItemAsync<string>(authTokenStorageKey);
+
+            if (token == null)
+            {
+                return "";
+            }
+
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            string user = jwt.Claims.First(x => x.Type == "unique_name").Value;
+            return user;
+		}
     }
 }
