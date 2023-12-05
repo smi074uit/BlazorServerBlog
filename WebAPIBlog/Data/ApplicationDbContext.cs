@@ -11,7 +11,7 @@ using SharedModels.Entities.Account;
 
 namespace WebAPIBlog.Data
 {
-	public class ApplicationDbContext : IdentityDbContext
+	public class ApplicationDbContext : IdentityDbContext<IdentityUser>
 	{
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
 		: base(options)

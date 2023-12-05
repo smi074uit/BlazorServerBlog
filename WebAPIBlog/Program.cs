@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 using System.Text;
+using WebAPIBlog;
 using WebAPIBlog.Data;
 using WebAPIBlog.Repositories;
 
@@ -12,9 +15,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+	options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme { In = ParameterLocation.Header, Name = "Authorization", Type = SecuritySchemeType.ApiKey });
+	options.OperationFilter<SecurityRequirementsOperationFilter>();
+
+});
 
 builder.Services.AddTransient<IAccountsRepository, AccountsRepository>();
+builder.Services.AddTransient<IBlogRepository, BlogRepository>();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDefaultIdentity<IdentityUser>()
 	.AddRoles<IdentityRole>()
@@ -60,5 +69,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.PrepareDatabase()
+	.GetAwaiter()
+	.GetResult();
 
 app.Run();
