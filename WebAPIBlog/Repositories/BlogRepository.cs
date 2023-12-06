@@ -180,7 +180,7 @@ namespace WebAPIBlog.Repositories
 				.Include(p => p.Owner)
 				.ToList();
 
-			if (!(comments.Count > 0))
+			if (comments.Count > 0)
 			{
 				foreach (Comment c in comments)
 				{

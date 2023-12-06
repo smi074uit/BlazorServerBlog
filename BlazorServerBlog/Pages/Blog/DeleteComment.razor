@@ -1,0 +1,64 @@
+﻿@page "/DeleteComment/{commentIdinput}"
+@inject NavigationManager NavigationManager
+@inject IAuthenticationService AuthService
+@inject IBlogService BlogService
+@inject IBlogEntryService BlogEntryService
+
+<h1>DeleteComment</h1>
+
+<h3>Er du sikker du ønsker å slette denne kommentaren?</h3>
+<div>
+    <h4>BlogEntry</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            CommentBody
+        </dt>
+        <dd class="col-sm-10">
+            @model.CommentBody
+        </dd>
+    </dl>
+
+    <EditForm Model="@model" OnSubmit="@Submit">
+        <button class="btn btn-danger" type="submit">Bekreft Slett</button>
+    </EditForm>
+
+    <a href="" onclick="@(()=>Return())">Tilbake til blogg</a>
+</div>
+
+@code {
+    [Parameter]
+    public string commentIdinput { get; set; }
+    public int commentId { get; set; }
+
+    Comment model { get; set; } = new();
+    bool loading = true;
+    private string error { get; set; } = "";
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        commentId = Int32.Parse(commentIdinput);
+        model = await BlogEntryService.GetComment(commentId);
+        loading = false;
+    }
+
+    private async void Submit()
+    {
+        bool success = await BlogEntryService.DeleteComment(commentId);
+        if (success)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            error = "Delete failed";
+            StateHasChanged();
+        }
+    }
+
+    public void Return()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

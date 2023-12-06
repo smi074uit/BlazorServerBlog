@@ -82,7 +82,6 @@ namespace WebAPIBlog.Controllers
 		[HttpPost("ToggleLock")]
 		public async Task<ActionResult> ToggleBlogLock()
 		{
-
 			string userID = GetUserIdFromLoggedInUser();
 
 			await _repository.toggleBlogLock(userID);

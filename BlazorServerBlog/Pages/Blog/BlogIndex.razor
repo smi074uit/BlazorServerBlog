@@ -4,9 +4,38 @@
 
 <h1>Index</h1>
 
-<p>
-	<a asp-action="Create">Opprett ny Blogg</a>
-</p>
+@if (!string.IsNullOrEmpty(error))
+{
+    <h2>ERROR: @error</h2>
+}
+
+@if (!creatingBlog)
+{
+    <p>
+        <a href="" onclick="@(()=>ToggleCreateBlog())" @onclick:preventDefault>Create New Blog</a>
+    </p>
+}
+@if (creatingBlog)
+{
+    <EditForm Model="@newBlog" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        <div class="form-group">
+            <label>Din Blogg Tittel:</label>
+            <InputText @bind-Value="newBlog.BlogTitle" class="form-control" />
+            <ValidationMessage For="@(() => newBlog.BlogTitle)" />
+        </div>
+        <div class="form-group">
+            <label>Beskrivelse:</label>
+            <InputText @bind-Value="newBlog.Description" class="form-control" />
+            <ValidationMessage For="@(() => newBlog.Description)" />
+        </div>
+        <button disabled="@loading" class="btn btn-primary">
+            Lagre Endringer
+        </button>
+        <a href="" onclick="@(()=>ResetNewBlog())" class="btn btn-link" @onclick:preventDefault>Avbryt</a>
+    </EditForm>
+}
+
 
 @if (loading == false)
 {
@@ -63,6 +92,10 @@
     IEnumerable<Blog> Model;
     bool loading = true;
 
+    public bool creatingBlog { get; set; } = false;
+    BlogDTO newBlog { get; set; } = new();
+    private string error { get; set; } = "";
+
     protected async override Task OnInitializedAsync()
     {
         Model = await BlogService.GetBlogs();
@@ -72,5 +105,37 @@
     public void ViewBlog(int BlogId)
     {
         NavigationManager.NavigateTo("/ViewBlog/" + BlogId.ToString());
+    }
+
+    public void ToggleCreateBlog()
+    {
+        newBlog = new();
+
+        creatingBlog = true;
+        StateHasChanged();
+    }
+
+    public async void OnValidSubmit()
+    {
+        error = "";
+
+        int success = await BlogService.CreateBlog(newBlog);
+        if (success < 0)
+        {
+            error = "Create Blog failed";
+        }
+        creatingBlog = false;
+
+        loading = true;
+        Model = await BlogService.GetBlogs();
+        loading = false;
+        StateHasChanged();
+    }
+
+    public void ResetNewBlog()
+    {
+        newBlog = new();
+        creatingBlog = false;
+        StateHasChanged();
     }
 }

@@ -1,0 +1,70 @@
+﻿@page "/DeleteEntry/{entryIdinput}"
+@inject NavigationManager NavigationManager
+@inject IAuthenticationService AuthService
+@inject IBlogService BlogService
+@inject IBlogEntryService BlogEntryService
+
+<h1>DeleteBlogEntry</h1>
+
+<h3>Er du sikker du ønsker å slette denne posten?</h3>
+<div>
+    <h4>BlogEntry</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            EntryTitle
+        </dt>
+        <dd class="col-sm-10">
+            @model.EntryTitle
+        </dd>
+        <dt class="col-sm-2">
+            EntryBody
+        </dt>
+        <dd class="col-sm-10">
+            @model.EntryBody
+        </dd>
+    </dl>
+
+    <EditForm Model="@model" OnSubmit="@Submit">
+        <button class="btn btn-danger" type="submit">Bekreft Slett</button>
+    </EditForm>
+
+    <a href="" onclick="@(()=>Return())">Tilbake til blogg</a>
+</div>
+
+@code {
+    [Parameter]
+    public string entryIdinput { get; set; }
+    public int entryId { get; set; }
+
+    BlogEntry model { get; set; } = new();
+    bool loading = true;
+    private string error { get; set; } = "";
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        entryId = Int32.Parse(entryIdinput);
+        model = await BlogEntryService.GetEntry(entryId);
+        loading = false;
+    }
+
+    private async void Submit()
+    {
+        bool success = await BlogEntryService.DeleteEntry(entryId);
+        if (success)
+        {
+            NavigationManager.NavigateTo("/ViewBlog/" + model.BlogId.ToString());
+        }
+        else
+        {
+            error = "Delete failed";
+            StateHasChanged();
+        }
+    }
+
+    public void Return()
+    {
+        NavigationManager.NavigateTo("/ViewBlog/" + model.BlogId.ToString());
+    }
+}

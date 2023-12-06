@@ -60,7 +60,7 @@ namespace BlazorServerBlog.Services
 			return result;
 		}
 
-		public async Task<ActionResult<Comment>> GetComment(int commentId)
+		public async Task<Comment> GetComment(int commentId)
 		{
 			var response = api.GetData("BlogEntry/GetComment/" + commentId.ToString());
 

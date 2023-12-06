@@ -2,39 +2,72 @@
 @inject NavigationManager NavigationManager
 @inject IAuthenticationService AuthService
 @inject IBlogService BlogService
+@inject IBlogEntryService BlogEntryService
 
-
-<h1>IndexBlogEntry</h1>
 
 @if (!loading)
 {
+	<h1>@Model.Blog.BlogTitle</h1>
+	<br/>
+	<p>@Model.Blog.Description</p>
+	<br/>
 
 	@if (Model.Blog.Locked)
 	{
-		<h2>Bloggen er låst for kommentarer og innlegg.</h2>
+		<h2 style="color:red">Bloggen er låst for kommentarer og innlegg.</h2>
 	}
 
 	@if (Model.Blog.Owner.UserName == loggedInUserName)
 	{
-		<p>
-			<a href="" onclick="@(()=>CreateBlogEntry())">Ny Blog Post</a>
-		</p>
-		@if (Model.Blog.Locked)
+		<div class="card">
+			@if (Model.Blog.Locked)
+			{
+				<p>Din Blogg er låst. Ønsker du å åpne for innlegg og kommentarer?</p>
+			}
+			@if (!Model.Blog.Locked)
+			{
+				<p>Bloggen er åpen for innlegg og kommentarer. Ønsker du å låse den?</p>
+			}
+			<div class="card-body">
+				<a href="" onclick="@(()=>ToggleBlogLock())" @onclick:preventDefault>Lås/Avlås</a>
+			</div>
+		</div>
+		
+		@if (!creatingNewEntry)
 		{
-			<p>Bloggen er låst. Ønsker du å åpne for innlegg og kommentarer?</p>
-		}
-		@if (!Model.Blog.Locked)
-		{
-			<p>Bloggen er åpen for innlegg og kommentarer. Ønsker du å låse den?</p>
-		}
 		<p>
-			<a href="" onclick="@(()=>ToggleBlogLock())" @onclick:preventDefault>Lås/Avlås</a>
+			<a href="" onclick="@(()=>CreateBlogEntry())" @onclick:preventDefault>Ny Blog Post</a>
 		</p>
+		}
+		@if (creatingNewEntry)
+		{
+			<EditForm Model="@newEntry" OnValidSubmit="OnValidSubmitNewEntry">
+				<DataAnnotationsValidator />
+				<div class="form-group">
+					<label>Ny Post Tittel</label>
+					<InputText @bind-Value="newEntry.EntryTitle" class="form-control" />
+					<ValidationMessage For="@(() => newEntry.EntryTitle)" />
+				</div>
+				<div class="form-group">
+					<label>Ny Post innhold</label>
+					<InputText @bind-Value="newEntry.EntryBody" class="form-control" />
+					<ValidationMessage For="@(() => newEntry.EntryBody)" />
+				</div>
+				<button disabled="@loading" class="btn btn-primary">
+					Post!
+				</button>
+				<a href="" onclick="@(()=>ResetNewBlogEntry())" class="btn btn-link" @onclick:preventDefault>Avbryt</a>
+			</EditForm>
+		}
 	}
 
 	<p>
 		<a href="/">Back</a>
 	</p>
+	@if (!string.IsNullOrEmpty(error))
+	{
+		<h2 style="color:red">ERROR: @error</h2>
+	}
 	<table class="table">
 		<thead>
 			<tr>
@@ -64,13 +97,57 @@
 							{
 								@if (Model.Blog.Owner.UserName == loggedInUserName)
 								{
-									<br />
-									<a href="" onclick="@(()=>EditBlogEntry(e.BlogEntryId))">Rediger Post</a>
+									@if(editingEntryId != e.BlogEntryId)
+									{
+										<a href="" onclick="@(()=>EditBlogEntry(e))" @onclick:preventDefault>Rediger Post</a>
+									}
+									@if(editingEntryId == e.BlogEntryId)
+									{
+										<EditForm Model="@editingEntry" OnValidSubmit="OnValidSubmitEditEntry">
+											<DataAnnotationsValidator />
+											<div class="form-group">
+												<label>Rediger Post Tittel</label>
+												<InputText @bind-Value="editingEntry.EntryTitle" class="form-control" />
+												<ValidationMessage For="@(() => editingEntry.EntryTitle)" />
+											</div>
+											<div class="form-group">
+												<label>Rediger Post Innhold</label>
+												<InputText @bind-Value="editingEntry.EntryBody" class="form-control" />
+												<ValidationMessage For="@(() => editingEntry.EntryBody)" />
+											</div>
+											<button disabled="@loading" class="btn btn-primary">
+												Post!
+											</button>
+											<a href="" onclick="@(()=>ResetEditBlogEntry())" class="btn btn-link"@onclick:preventDefault>Avbryt</a>
+										</EditForm>
+									}
+
+
 									<br />
 									<a href="" onclick="@(()=>DeleteBlogEntry(e.BlogEntryId))">Slett Post</a>
 								}
+
 								<br />
-								<a href="" onclick="@(()=>CreateComment(e.BlogEntryId))">Legg til kommentar</a>
+								<br />
+								@if (newCommentEntryId != e.BlogEntryId)
+								{
+									<a href="" onclick="@(()=>CreateComment(e.BlogEntryId))" @onclick:preventDefault>Legg til kommentar</a>
+								}
+								@if (newCommentEntryId == e.BlogEntryId)
+								{
+									<EditForm Model="@newComment" OnValidSubmit="OnValidSubmitNewComment">
+										<DataAnnotationsValidator />
+										<div class="form-group">
+											<label>Skriv Ny Kommentar:</label>
+											<InputText @bind-Value="newComment.CommentBody" class="form-control" />
+											<ValidationMessage For="@(() => newComment.CommentBody)" />
+										</div>
+										<button disabled="@loading" class="btn btn-primary">
+											Post Kommentar!
+										</button>
+										<a href="" onclick="@(()=>ResetNewComment())" class="btn btn-link" @onclick:preventDefault>Avbryt</a>
+									</EditForm>
+								}
 							}
 						}
 					</td>
@@ -82,21 +159,42 @@
 					{
 						<tr>
 							<td>
-								<div class="CommentBox">
+								<div class="card" style="background-color:green">
 									@c.Owner.UserName
 									<br />
 									<br />
-									@c.CommentBody
-									@if (!Model.Blog.Locked)
-									{
-										@if (c.Owner.UserName == loggedInUserName)
+									<div class="card-body" style="background-color:darkgreen">
+										@c.CommentBody
+										@if (!Model.Blog.Locked)
 										{
-											<br />
-											<a href="" onclick="@(()=>EditComment(c.CommentId))">Rediger Kommentar</a>
-											<br />
-											<a href="" onclick="@(()=>DeleteComment(c.CommentId))">Slett Kommentar</a>
+											@if (c.Owner.UserName == loggedInUserName)
+											{
+												<br />
+												@if (editingCommentId != c.CommentId)
+												{
+													<a href="" onclick="@(()=>EditComment(c))" @onclick:preventDefault>Rediger Kommentar</a>
+												}
+												@if (editingCommentId == c.CommentId)
+												{
+													<EditForm Model="@editingComment" OnValidSubmit="OnValidSubmitEditComment">
+														<DataAnnotationsValidator />
+														<div class="form-group">
+															<label>Redigér Kommentar:</label>
+															<InputText @bind-Value="editingComment.CommentBody" class="form-control" />
+															<ValidationMessage For="@(() => editingComment.CommentBody)" />
+														</div>
+														<button disabled="@loading" class="btn btn-primary">
+															Lagre Endringer
+														</button>
+														<a href="" onclick="@(()=>ResetEditComment())" class="btn btn-link" @onclick:preventDefault>Avbryt</a>
+													</EditForm>
+												}
+
+												<br />
+												<a href="" onclick="@(()=>DeleteComment(c.CommentId))">Slett Kommentar</a>
+											}
 										}
-									}
+									</div>
 								</div>
 							</td>
 						</tr>
@@ -113,9 +211,22 @@
 	public string blogIdinput { get; set; }
 	public int blogId { get; set; }
 
-	BlogViewModel Model;
-	bool loading = true;
-	string loggedInUserName;
+	BlogViewModel Model { get; set; }
+	bool loading { get; set; } = true;
+	string loggedInUserName { get; set; }
+	private string error { get; set; } = "";
+
+	public bool creatingNewEntry { get; set; } = false;
+	public int newCommentEntryId { get; set; } = -1;
+
+	BlogEntryDTO newEntry { get; set; } = new();
+	CommentDTO newComment { get; set; } = new();
+
+	public int editingEntryId { get; set; } = -1;
+	public int editingCommentId { get; set; } = -1;
+
+	BlogEntry editingEntry { get; set; } = new();
+	Comment editingComment { get; set; } = new();
 
 	protected async override Task OnInitializedAsync()
 	{
@@ -127,20 +238,42 @@
 
 	public void CreateBlogEntry()
 	{
-		NavigationManager.NavigateTo("/NewEntry/" + Model.Blog.BlogId.ToString());
+		newEntry = new();
+
+		creatingNewEntry = true;
+		StateHasChanged();
 	}
 
-	public void ToggleBlogLock()
+	public void CreateComment(int entryId)
 	{
-		if (BlogService.ToggleBlogLock())
+		newComment = new();
+
+		newCommentEntryId = entryId;
+		StateHasChanged();
+	}
+
+	public void EditBlogEntry(BlogEntry entry)
+	{
+		editingEntry = new()
 		{
-			Model.Blog.Locked = !Model.Blog.Locked;
-		}
+			EntryTitle = entry.EntryTitle,
+			EntryBody = entry.EntryBody
+		};
+
+		editingEntryId = entry.BlogEntryId;
+		StateHasChanged();
 	}
 
-	public void EditBlogEntry(int entryId)
+	public void EditComment(Comment c)
 	{
-		NavigationManager.NavigateTo("/EditEntry/" + entryId.ToString());
+		editingComment = new()
+			{
+				EntryId = c.EntryId,
+				CommentBody = c.CommentBody
+			};
+
+		editingCommentId = c.CommentId;
+		StateHasChanged();
 	}
 
 	public void DeleteBlogEntry(int entryId)
@@ -148,18 +281,116 @@
 		NavigationManager.NavigateTo("/DeleteEntry/" + entryId.ToString());
 	}
 
-	public void CreateComment(int entryId)
-	{
-		NavigationManager.NavigateTo("/CreateComment/" + entryId.ToString());
-	}
-
-	public void EditComment(int commentId)
-	{
-		NavigationManager.NavigateTo("/EditComment/" + commentId.ToString());
-	}
-
 	public void DeleteComment(int commentId)
 	{
 		NavigationManager.NavigateTo("/DeleteComment/" + commentId.ToString());
+	}
+
+	public void ResetNewBlogEntry()
+	{
+		newEntry = new();
+		creatingNewEntry = false;
+		StateHasChanged();
+	}
+
+	public void ResetNewComment()
+	{
+		newComment = new();
+		newCommentEntryId = -1;
+		StateHasChanged();
+	}
+
+	public void ResetEditBlogEntry()
+	{
+		editingEntry = new();
+		editingEntryId = -1;
+		StateHasChanged();
+	}
+
+	public void ResetEditComment()
+	{
+		editingComment = new();
+		editingCommentId = -1;
+		StateHasChanged();
+	}
+
+
+	public void ToggleBlogLock()
+	{
+		if (BlogService.ToggleBlogLock())
+		{
+			Model.Blog.Locked = !Model.Blog.Locked;
+			StateHasChanged();
+		}
+	}
+
+	public async void OnValidSubmitNewEntry()
+	{
+		error = "";
+		newEntry.BlogId = blogId;
+
+		int success = await BlogEntryService.CreateBlogEntry(newEntry);
+		if (success < 0)
+		{
+			error = "Create Entry failed";
+		}
+		creatingNewEntry = false;
+		
+		loading = true;
+		Model = await BlogService.GetBlogEntries(blogId);
+		loading = false;
+		StateHasChanged();
+	}
+
+	public async void OnValidSubmitNewComment()
+	{
+		error = "";
+		newComment.EntryId = newCommentEntryId;
+
+		int success = await BlogEntryService.CreateComment(newComment);
+		if (success < 0)
+		{
+			error = "Create Comment failed";
+		}
+		newCommentEntryId = -1;
+
+		loading = true;
+		Model = await BlogService.GetBlogEntries(blogId);
+		loading = false;
+		StateHasChanged();
+	}
+
+	public async void OnValidSubmitEditEntry()
+	{
+		error = "";
+		editingEntry.BlogId = blogId;
+		editingEntry.BlogEntryId = editingEntryId;
+
+		bool success = await BlogEntryService.UpdateEntry(editingEntry);
+		if (!success)
+		{
+			error = "Edit Entry failed";
+		}
+		editingEntryId = -1;
+		StateHasChanged();
+	}
+
+	public async void OnValidSubmitEditComment()
+	{
+		error = "";
+
+		editingComment.CommentId = editingCommentId;
+
+		bool success = await BlogEntryService.UpdateComment(editingComment);
+		if (!success)
+		{
+			error = "Edit Comment failed";
+		}
+		editingCommentId = -1;
+
+		loading = true;
+		Model = await BlogService.GetBlogEntries(blogId);
+		loading = false;
+		StateHasChanged();
 	}
 }

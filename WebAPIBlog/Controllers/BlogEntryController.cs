@@ -102,14 +102,17 @@ namespace WebAPIBlog.Controllers
 				return BadRequest("UserID does not match");
 			}
 
-			await _repository.UpdateBlogEntry(entry);
+			oldEntry.EntryTitle = entry.EntryTitle;
+			oldEntry.EntryBody = entry.EntryBody;
+
+			await _repository.UpdateBlogEntry(oldEntry);
 
 			return Ok();
 		}
 
 		// PUT: api/BlogEntry/UpdateComment
 		[HttpPut("UpdateComment")]
-		public async Task<ActionResult> UpdateComment([FromBody] Comment c)
+		public async Task<ActionResult> UpdateComment(Comment c)
 		{
 			Comment oldC = await _repository.GetCommentById(c.CommentId);
 
@@ -125,7 +128,9 @@ namespace WebAPIBlog.Controllers
 				return BadRequest("UserID does not match");
 			}
 
-			await _repository.UpdateComment(c);
+			oldC.CommentBody = c.CommentBody;
+
+			await _repository.UpdateComment(oldC);
 
 			return Ok();
 		}

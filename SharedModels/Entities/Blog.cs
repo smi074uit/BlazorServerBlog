@@ -13,7 +13,7 @@ namespace SharedModels.Entities
 		public string BlogTitle { get; set; }
 		public string? Description { get; set; }
 		public bool Locked { get; set; }
-		public virtual IdentityUser Owner { get; set; }
+		public virtual IdentityUser Owner { get; set; } = new();
 		public string OwnerId { get; set; } = "";
 	}
 }
