@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Azure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using SharedModels.Entities;
 using System.Security.Claims;
 using WebAPIBlog.Repositories;
@@ -42,6 +44,9 @@ namespace WebAPIBlog.Controllers
 			};
 
 			BlogEntry newEntry = await _repository.AddBlogEntry(entryToSave);
+
+			ProcessTags(entryDTO.TagsString, newEntry);
+
 			return Ok(newEntry.BlogEntryId);
 		}
 
@@ -170,6 +175,42 @@ namespace WebAPIBlog.Controllers
 			await _repository.DeleteCommentById(commentId);
 
 			return Ok();
+		}
+
+		private async void ProcessTags(string tagsString, BlogEntry entry)
+		{
+			string[] tags = tagsString.Split(' ');
+			List<string> validTags = new();
+			bool tagIsValid;
+
+			foreach (string tag in tags)
+			{
+				if (!tag.IsNullOrEmpty())
+				{
+					if (tag[0] == '#')
+					{
+						tagIsValid = true;
+						for (int i = 1; i < tag.Length; i++) 
+						{
+							if (!char.IsLetterOrDigit(tag[i]))
+							{
+								tagIsValid = false;
+								break;
+							}
+						}
+						if(tagIsValid)
+						{
+							validTags.Add(tag);
+						}
+					}
+				}
+			}
+
+			foreach (string tag in validTags)
+			{
+				await _repository.AddTagIfNewTag(tag);
+			}
+			await _repository.AddTagsToEntry(entry, validTags);
 		}
 
 		private string GetUserIdFromLoggedInUser()

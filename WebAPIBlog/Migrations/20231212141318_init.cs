@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace WebAPIBlog.Migrations
 {
-    public partial class CreateIdentitySchema : Migration
+    /// <inheritdoc />
+    public partial class init : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -61,6 +63,19 @@ namespace WebAPIBlog.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BlogEntry", x => x.BlogEntryId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tags",
+                columns: table => new
+                {
+                    TagId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TagName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tags", x => x.TagId);
                 });
 
             migrationBuilder.CreateTable(
@@ -212,6 +227,30 @@ namespace WebAPIBlog.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "BlogEntryTag",
+                columns: table => new
+                {
+                    EntriesBlogEntryId = table.Column<int>(type: "int", nullable: false),
+                    TagsTagId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BlogEntryTag", x => new { x.EntriesBlogEntryId, x.TagsTagId });
+                    table.ForeignKey(
+                        name: "FK_BlogEntryTag_BlogEntry_EntriesBlogEntryId",
+                        column: x => x.EntriesBlogEntryId,
+                        principalTable: "BlogEntry",
+                        principalColumn: "BlogEntryId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BlogEntryTag_Tags_TagsTagId",
+                        column: x => x.TagsTagId,
+                        principalTable: "Tags",
+                        principalColumn: "TagId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -257,11 +296,17 @@ namespace WebAPIBlog.Migrations
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_BlogEntryTag_TagsTagId",
+                table: "BlogEntryTag",
+                column: "TagsTagId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Comment_OwnerId",
                 table: "Comment",
                 column: "OwnerId");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
@@ -283,13 +328,19 @@ namespace WebAPIBlog.Migrations
                 name: "Blog");
 
             migrationBuilder.DropTable(
-                name: "BlogEntry");
+                name: "BlogEntryTag");
 
             migrationBuilder.DropTable(
                 name: "Comment");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "BlogEntry");
+
+            migrationBuilder.DropTable(
+                name: "Tags");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

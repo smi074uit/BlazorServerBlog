@@ -58,13 +58,13 @@ namespace WebAPIBlog
 
 			// Blogs
 			Blog blog1 = new Blog
-			{ BlogTitle = "Hammere og slikt", Description = "Test", Locked = false, Owner = user1 };
+			{ BlogTitle = "Hammere og slikt", Description = "Alt om verktøy", Locked = false, Owner = user1 };
 			Blog dbBlog1 = db.Blog.Add(blog1).Entity;
 			Blog blog2 = new Blog
 			{ BlogTitle = "Biler og sånt", Description = null, Locked = false, Owner = user2 };
 			Blog dbBlog2 = db.Blog.Add(blog2).Entity;
 			Blog blog3 = new Blog
-			{ BlogTitle = "Mat og ting", Description = "Test", Locked = true, Owner = user1 };
+			{ BlogTitle = "Mat og ting", Description = "Oppskrifter og midagsideer", Locked = true, Owner = user1 };
 			Blog dbBlog3 = db.Blog.Add(blog3).Entity;
 
 			await db.SaveChangesAsync();
@@ -72,6 +72,23 @@ namespace WebAPIBlog
 			dbBlog1 = db.Blog.Entry(dbBlog1).Entity;
 			dbBlog2 = db.Blog.Entry(dbBlog2).Entity;
 			dbBlog3 = db.Blog.Entry(dbBlog3).Entity;
+
+			// Tags
+			Tag tag1 = new Tag
+			{ TagName = "#Verktøy" };
+			Tag dbtag1 = db.Tag.Add(tag1).Entity;
+			Tag tag2 = new Tag
+			{ TagName = "#Biler" };
+			Tag dbtag2 = db.Tag.Add(tag2).Entity;
+			Tag tag3 = new Tag
+			{ TagName = "#Mat" };
+			Tag dbtag3 = db.Tag.Add(tag3).Entity;
+
+			await db.SaveChangesAsync();
+
+			dbtag1 = db.Tag.Entry(dbtag1).Entity;
+			dbtag2 = db.Tag.Entry(dbtag2).Entity;
+			dbtag3 = db.Tag.Entry(dbtag3).Entity;
 
 			// BlogEntries
 			BlogEntry entry1 = new BlogEntry
@@ -89,9 +106,40 @@ namespace WebAPIBlog
 
 			await db.SaveChangesAsync();
 
+			// BlogEntryTag relation
 			dbEntry1 = db.BlogEntry.Entry(dbEntry1).Entity;
 			dbEntry2 = db.BlogEntry.Entry(dbEntry2).Entity;
 			dbEntry3 = db.BlogEntry.Entry(dbEntry3).Entity;
+
+			//List<BlogEntry> entries1 = new() { dbEntry1 };
+			//List<BlogEntry> entries2 = new() { dbEntry1, dbEntry2 };
+			//List<BlogEntry> entries3 = new() { dbEntry3 };
+
+			//List<Tag> tags1 = new() { dbtag1, dbtag2 };
+			//List<Tag> tags2 = new() { dbtag2 };
+			//List<Tag> tags3 = new() { dbtag3 };
+
+			dbEntry1.Tags.Add(dbtag1);
+			dbEntry1.Tags.Add(dbtag2);
+			dbEntry2.Tags.Add(dbtag2);
+			dbEntry3.Tags.Add(dbtag3);
+
+			dbEntry1 = db.BlogEntry.Update(dbEntry1).Entity;
+			dbEntry2 = db.BlogEntry.Update(dbEntry2).Entity;
+			dbEntry3 = db.BlogEntry.Update(dbEntry3).Entity;
+
+			await db.SaveChangesAsync();
+
+			dbtag1.Entries.Add(dbEntry1);
+			dbtag2.Entries.Add(dbEntry1);
+			dbtag2.Entries.Add(dbEntry2);
+			dbtag3.Entries.Add(dbEntry3);
+
+			dbtag1 = db.Tag.Update(dbtag1).Entity;
+			dbtag2 = db.Tag.Update(dbtag2).Entity;
+			dbtag3 = db.Tag.Update(dbtag3).Entity;
+
+			await db.SaveChangesAsync();
 
 			// Comments
 			Comment c1 = new Comment

@@ -42,9 +42,14 @@ namespace WebAPIBlog.Controllers
 			BlogViewModel viewData = new()
 			{
 				Blog = blog,
-				BlogEntries = entries,
 				Comments = comments
 			};
+
+			// Workaround for passing recursive data into json
+			foreach (BlogEntry entry in entries)
+			{
+				viewData.BlogEntries.Add(CopyBlogEntry(entry));
+			}
 
 			return Ok(viewData);
 		}
@@ -93,6 +98,24 @@ namespace WebAPIBlog.Controllers
 		{
 			ClaimsIdentity identity = HttpContext.User.Identity as ClaimsIdentity;
 			return identity.Claims.FirstOrDefault(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value; //"NameIdentifier").Value;
+		}
+
+		private BlogEntry CopyBlogEntry(BlogEntry oldEntry)
+		{
+			BlogEntry newEntry = new()
+			{
+				BlogEntryId = oldEntry.BlogEntryId,
+				BlogId = oldEntry.BlogId,
+				EntryTitle = oldEntry.EntryTitle,
+				EntryBody = oldEntry.EntryBody
+			};
+
+			foreach(Tag t in oldEntry.Tags)
+			{
+				newEntry.Tags.Add(new Tag() { TagId=t.TagId, TagName=t.TagName });
+			}
+
+			return newEntry;
 		}
 	
 	}

@@ -18,6 +18,7 @@ namespace WebAPIBlog.Data
 		{ }
 
 		public DbSet<Blog> Blog { get; set; }
+		public DbSet<Tag> Tag { get; set; }
 		public DbSet<BlogEntry> BlogEntry { get; set; }
 		public DbSet<Comment> Comment { get; set; }
 
@@ -27,8 +28,13 @@ namespace WebAPIBlog.Data
 			base.OnModelCreating(builder);
 
 			builder.Entity<Blog>().ToTable("Blog");
+
+			builder.Entity<Tag>().ToTable("Tags");
+
 			builder.Entity<BlogEntry>().ToTable("BlogEntry");
+
 			builder.Entity<Comment>().ToTable("Comment");
+
 
 			builder.Entity<IdentityUser>(entity =>
 			{
