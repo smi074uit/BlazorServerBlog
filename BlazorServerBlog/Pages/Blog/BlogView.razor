@@ -12,6 +12,10 @@
 	<p>@Model.Blog.Description</p>
 	<br/>
 
+	<p>
+		<a href="/">Back</a>
+	</p>
+
 	@if (Model.Blog.Locked)
 	{
 		<h2 style="color:red">Bloggen er låst for kommentarer og innlegg.</h2>
@@ -32,7 +36,8 @@
 				<a href="" onclick="@(()=>ToggleBlogLock())" @onclick:preventDefault>Lås/Avlås</a>
 			</div>
 		</div>
-		
+
+		<br />
 		@if (!creatingNewEntry)
 		{
 		<p>
@@ -41,29 +46,38 @@
 		}
 		@if (creatingNewEntry)
 		{
+			
 			<EditForm Model="@newEntry" OnValidSubmit="OnValidSubmitNewEntry">
 				<DataAnnotationsValidator />
 				<div class="form-group">
+					<label>(Påkrevd)</label>
 					<label>Ny Post Tittel</label>
 					<InputText @bind-Value="newEntry.EntryTitle" class="form-control" />
 					<ValidationMessage For="@(() => newEntry.EntryTitle)" />
 				</div>
+				<br />
 				<div class="form-group">
+					<label>(Påkrevd)</label>
 					<label>Ny Post innhold</label>
-					<InputText @bind-Value="newEntry.EntryBody" class="form-control" />
+					<InputTextArea @bind-Value="newEntry.EntryBody" class="form-control" />
 					<ValidationMessage For="@(() => newEntry.EntryBody)" />
+				</div>
+				<br />
+				<div class="form-group">
+					<label>(Valgfritt)</label>
+					<label>Tags, Begynn hver tag med #, separer med komma + mellomrom (f.eks "#mat, #verktøy")</label>
+					<InputText @bind-Value="newEntry.TagsString" class="form-control" />
+					<ValidationMessage For="@(() => newEntry.TagsString)" />
 				</div>
 				<button disabled="@loading" class="btn btn-primary">
 					Post!
 				</button>
 				<a href="" onclick="@(()=>ResetNewBlogEntry())" class="btn btn-link" @onclick:preventDefault>Avbryt</a>
 			</EditForm>
+			<br />
 		}
 	}
 
-	<p>
-		<a href="/">Back</a>
-	</p>
 	@if (!string.IsNullOrEmpty(error))
 	{
 		<h2 style="color:red">ERROR: @error</h2>
@@ -86,6 +100,13 @@
 				<tr>
 					<td>
 						@e.EntryTitle
+						<br/>
+						<br />
+						@foreach (Tag t in e.Tags)
+						{
+							<br />
+							@t.TagName
+						}
 					</td>
 					<td>
 						@e.EntryBody

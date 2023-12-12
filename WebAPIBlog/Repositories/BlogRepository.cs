@@ -120,16 +120,19 @@ namespace WebAPIBlog.Repositories
 
 		public async Task<List<BlogEntry>> GetBlogEntriesByBlogId(int id)
 		{
-			var entries = _db.BlogEntry
-				.Where(b => b.BlogId == id)
-				.ToList();
+			IQueryable<BlogEntry> entries = _db.BlogEntry
+				.Include(b => b.Tags)
+				.Where(b => b.BlogId == id);
+			List<BlogEntry> res = entries.ToList();
 
-			return entries;
+			return res;
 		}
 
 		public async Task<BlogEntry> GetBlogEntryById(int id)
 		{
-			var entry = _db.BlogEntry.Find(id);
+			var entry = _db.BlogEntry
+				//.Include(b => b.Tags)
+				.FirstOrDefault(x => x.BlogEntryId == id);
 			return entry;
 		}
 
@@ -196,6 +199,37 @@ namespace WebAPIBlog.Repositories
 		{
 			Comment c = _db.Comment.Find(id);
 			_db.Comment.Remove(c);
+			_db.SaveChanges();
+		}
+
+		public async Task AddTagIfNewTag(string tag)
+		{
+			if (!_db.Tag.Any(t => t.TagName == tag))
+			{
+				Tag dbTag = new() { TagName = tag };
+				_db.Tag.Add(dbTag);
+				_db.SaveChanges();
+			}
+			return;
+		}
+
+		public async Task AddTagsToEntry(BlogEntry entry, List<string> tags)
+		{
+			List<Tag> tagsList = new List<Tag>();
+			BlogEntry dbEntry = _db.BlogEntry.Entry(entry).Entity;
+			foreach (string tag in tags)
+			{
+				tagsList.Add(_db.Tag.Single(t => t.TagName == tag));
+			}
+
+			dbEntry.Tags.Clear();
+			foreach (Tag t in tagsList)
+			{
+				dbEntry.Tags.Add(t);
+			}
+			
+
+			_db.BlogEntry.Update(dbEntry);
 			_db.SaveChanges();
 		}
 	}
