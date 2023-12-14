@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using SharedModels.Entities;
-using SharedModels.Entities.Account;
+﻿using SharedModels.Entities;
 
 namespace BlazorServerBlog.Services
 {

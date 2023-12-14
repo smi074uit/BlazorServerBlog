@@ -1,6 +1,7 @@
 ﻿@page "/"
 @inject NavigationManager NavigationManager
 @inject IBlogService BlogService
+@inject IAuthenticationService AuthService
 
 <h1>Index</h1>
 
@@ -9,36 +10,54 @@
     <h2>ERROR: @error</h2>
 }
 
-@if (!creatingBlog)
-{
-    <p>
-        <a href="" onclick="@(()=>ToggleCreateBlog())" @onclick:preventDefault>Create New Blog</a>
-    </p>
-}
-@if (creatingBlog)
-{
-    <EditForm Model="@newBlog" OnValidSubmit="OnValidSubmit">
-        <DataAnnotationsValidator />
-        <div class="form-group">
-            <label>Din Blogg Tittel:</label>
-            <InputText @bind-Value="newBlog.BlogTitle" class="form-control" />
-            <ValidationMessage For="@(() => newBlog.BlogTitle)" />
-        </div>
-        <div class="form-group">
-            <label>Beskrivelse:</label>
-            <InputText @bind-Value="newBlog.Description" class="form-control" />
-            <ValidationMessage For="@(() => newBlog.Description)" />
-        </div>
-        <button disabled="@loading" class="btn btn-primary">
-            Lagre Endringer
-        </button>
-        <a href="" onclick="@(()=>ResetNewBlog())" class="btn btn-link" @onclick:preventDefault>Avbryt</a>
-    </EditForm>
-}
-
 
 @if (loading == false)
 {
+
+    @if (!userHasBlog)
+    {
+
+
+        @if (!creatingBlog)
+        {
+            <AuthorizeView>
+                <Authorized>
+                    <p>
+                        <a href="" onclick="@(()=>ToggleCreateBlog())" @onclick:preventDefault>Create New Blog</a>
+                    </p>
+                </Authorized>
+            </AuthorizeView>
+        }
+
+
+        @if (creatingBlog)
+        {
+            <AuthorizeView>
+                <Authorized>
+                    <EditForm Model="@newBlog" OnValidSubmit="OnValidSubmit" Context="EditFormContext">
+                        <DataAnnotationsValidator />
+                        <div class="form-group">
+                            <label>Din Blogg Tittel:</label>
+                            <InputText @bind-Value="newBlog.BlogTitle" class="form-control" />
+                            <ValidationMessage For="@(() => newBlog.BlogTitle)" />
+                        </div>
+                        <div class="form-group">
+                            <label>Beskrivelse:</label>
+                            <InputText @bind-Value="newBlog.Description" class="form-control" />
+                            <ValidationMessage For="@(() => newBlog.Description)" />
+                        </div>
+                        <button disabled="@loading" class="btn btn-primary">
+                            Lagre Endringer
+                        </button>
+                        <a href="" onclick="@(()=>ResetNewBlog())" class="btn btn-link" @onclick:preventDefault>Avbryt</a>
+                    </EditForm>
+                </Authorized>
+            </AuthorizeView>
+        }
+    }
+
+
+
     <table class="table">
         <thead>
             <tr>
@@ -91,14 +110,23 @@
 @code {
     IEnumerable<Blog> Model;
     bool loading = true;
+    bool userHasBlog = true;
 
     public bool creatingBlog { get; set; } = false;
     BlogDTO newBlog { get; set; } = new();
     private string error { get; set; } = "";
+    string loggedInUserName { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
         Model = await BlogService.GetBlogs();
+        loggedInUserName = await AuthService.GetUserNameFromToken();
+        if (!String.IsNullOrEmpty(loggedInUserName))
+        {
+            userHasBlog = await BlogService.DoesUserHaveBlog();
+        }
+
+
         loading = false;
     }
 
@@ -129,6 +157,7 @@
         loading = true;
         Model = await BlogService.GetBlogs();
         loading = false;
+        userHasBlog = true;
         StateHasChanged();
     }
 
