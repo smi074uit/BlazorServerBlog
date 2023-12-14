@@ -14,6 +14,6 @@ namespace WebAPIBlog.Repositories
 		Task<bool> DeleteUser(User u);
 		Task LogoutUser();
 		Task<User> AddUser(RegisterRequest u);
-		Task<List<User>> GetAllUsers();
+		Task<List<string>> GetAllUsernames();
 	}
 }

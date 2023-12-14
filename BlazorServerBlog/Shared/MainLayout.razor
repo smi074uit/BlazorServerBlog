@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@using Blazored.Typeahead
+@inject IMainLayoutService MainService
 
 <PageTitle>BlazorServerBlog</PageTitle>
 
@@ -9,7 +11,22 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+           @*  @if (!toggleSearchUsers)
+            {
+                <a href="" onclick="@(()=>ToggleSearch())" @onclick:preventDefault>Search users</a>
+            <BlazoredTypeahead SearchMethod="searchTags" @bind-Value="selectedTag">
+                <SelectedTemplate>
+                    @context.TagName
+                </SelectedTemplate>
+                <ResultTemplate>@context.TagName</ResultTemplate>
+
+            </BlazoredTypeahead>
+            }
+            @if (toggleSearchUsers)
+            {
+                <a href="" onclick="@(()=>ToggleSearch())" @onclick:preventDefault>Search tags</a>
+            } *@
+            
         </div>
 
         <article class="content px-4">
@@ -17,3 +34,34 @@
         </article>
     </main>
 </div>
+
+@code{
+    bool loading = true;
+    bool toggleSearchUsers = false;
+    IEnumerable<Tag> tagsList;
+    IEnumerable<string> usernameList;
+
+    Tag selectedTag = new();
+    string selectedUser = "";
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        tagsList = await MainService.GetTags();
+        usernameList = await MainService.GetUsernames();
+
+        loading = false;
+    }
+
+    public void ToggleSearch()
+    {
+        toggleSearchUsers = !toggleSearchUsers;
+        StateHasChanged();
+    }
+
+    private async Task <IEnumerable<Tag>> searchTags(string searchtext)
+    {
+        return await Task.FromResult(tagsList.Where(x => x.TagName.ToLower().Contains(searchtext.ToLower())).ToList());
+    }
+
+}

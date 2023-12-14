@@ -21,6 +21,7 @@ builder.Services.AddSingleton<IApiHelper, ApiHelper>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddSingleton<IBlogService, BlogService>();
 builder.Services.AddSingleton<IBlogEntryService, BlogEntryService>();
+builder.Services.AddSingleton<IMainLayoutService, MainLayoutService>();
 
 var app = builder.Build();
 

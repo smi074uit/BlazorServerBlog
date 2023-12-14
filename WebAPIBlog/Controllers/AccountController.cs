@@ -77,5 +77,15 @@ namespace WebAPIBlog.Controllers
 
 			return Ok();
 		}
+
+		[AllowAnonymous]
+		[HttpGet]
+		[Route("getAllUsernames")]
+		public async Task<ActionResult<IEnumerable<string>>> GetAllUsernames()
+		{
+            List<string> res = await _repo.GetAllUsernames();
+
+			return Ok(res);
+		}
 	}
 }

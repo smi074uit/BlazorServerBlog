@@ -54,8 +54,17 @@ namespace WebAPIBlog.Controllers
 			return Ok(viewData);
 		}
 
-		// POST: api/Blog/CreateBlog
-		[HttpPost("CreateBlog")]
+        // GET: api/Blog/GetTags
+        [AllowAnonymous]
+        [HttpGet("GetAllTags")]
+        public async Task<ActionResult<IEnumerable<Tag>>> GetAllTags()
+        {
+            IEnumerable<Tag> res = await _repository.GetAllTags();
+            return Ok(res);
+        }
+
+        // POST: api/Blog/CreateBlog
+        [HttpPost("CreateBlog")]
 		public async Task<ActionResult<int>> CreateBlog([FromBody] BlogDTO blog)
 		{
 			string userID = GetUserIdFromLoggedInUser();

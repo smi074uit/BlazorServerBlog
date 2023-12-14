@@ -168,9 +168,17 @@ namespace WebAPIBlog.Repositories
 
 		}
 
-		public Task<List<User>> GetAllUsers()
+		public async Task<List<string>> GetAllUsernames()
 		{
-			throw new NotImplementedException();
+            List<IdentityUser> users = _db.Users.ToList();
+			List<string> result = new List<string>();
+
+			foreach (var user in users)
+			{
+				result.Add(user.UserName);
+			}
+
+			return result;
 		}
 	}
 }

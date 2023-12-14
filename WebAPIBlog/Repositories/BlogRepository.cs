@@ -232,5 +232,11 @@ namespace WebAPIBlog.Repositories
 			_db.BlogEntry.Update(dbEntry);
 			_db.SaveChanges();
 		}
+
+        public async Task<IEnumerable<Tag>> GetAllTags()
+        {
+            List<Tag> tags = _db.Tag.ToList();
+            return tags;
+        }
 	}
 }
