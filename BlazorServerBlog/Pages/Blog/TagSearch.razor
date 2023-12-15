@@ -1,0 +1,60 @@
+﻿@page "/TagSearch/{TagIdInput}"
+@inject NavigationManager NavigationManager
+@inject IBlogEntryService BlogEntryService
+
+<h3>Blog Entries Containing The Selected Tag:</h3>
+
+@if (!loading)
+{
+	<ul>
+		@foreach(BlogEntry e in Model)
+		{
+			<li>
+				<div class="card">
+					@e.EntryTitle
+					<br/>
+					<div class="card-body">
+						@e.EntryBody
+						<br/>
+						<br/>
+						<label>Tags:</label>
+						<ul>
+							@foreach(Tag t in e.Tags)
+							{
+								<li>
+									@t.TagName
+								</li>
+							}
+						</ul>
+					</div>
+				</div>
+				<a href="" onclick="@(()=>GoToBlog(e.BlogId))">Go To Blog</a>
+				<br />
+				<br />
+			</li>
+			
+		}
+	</ul>
+}
+
+@code {
+	[Parameter]
+	public string TagIdInput { get; set; }
+	public int TagId { get; set; }
+
+	IEnumerable<BlogEntry> Model;
+	bool loading = true;
+
+	protected async override Task OnInitializedAsync()
+	{
+		TagId = Int32.Parse(TagIdInput);
+		Model = await BlogEntryService.GetBlogEntriesFromTagId(TagId);
+
+		loading = false;
+	}
+
+	public void GoToBlog(int BlogId)
+	{
+		NavigationManager.NavigateTo("/ViewBlog/" + BlogId.ToString());
+	}
+}

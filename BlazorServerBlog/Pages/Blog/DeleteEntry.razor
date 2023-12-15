@@ -23,6 +23,19 @@
         <dd class="col-sm-10">
             @model.EntryBody
         </dd>
+        <dt class="col-sm-2">
+            Tags
+        </dt>
+        <dd class="col-sm-10">
+            <ul>
+                @foreach(Tag t in model.Tags)
+                {
+                    <li>
+                        @t.TagName
+                    </li>
+                }
+            </ul>
+        </dd>
     </dl>
 
     <EditForm Model="@model" OnSubmit="@Submit">

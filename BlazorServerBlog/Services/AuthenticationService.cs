@@ -6,9 +6,9 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace BlazorServerBlog.Services
 {
-	public class AuthenticationService : IAuthenticationService
-	{
-		private readonly IApiHelper _api;
+    public class AuthenticationService : IAuthenticationService
+    {
+        private readonly IApiHelper _api;
         private readonly ILocalStorageService localStorage;
         private readonly IConfiguration config;
         private readonly AuthenticationStateProvider authStateProvider;
@@ -18,25 +18,25 @@ namespace BlazorServerBlog.Services
                                      ILocalStorageService localStorage,
                                      IConfiguration config,
                                      AuthenticationStateProvider authStateProvider)
-		{
-			this._api = api;
+        {
+            this._api = api;
             this.localStorage = localStorage;
             this.config = config;
             this.authStateProvider = authStateProvider;
             authTokenStorageKey = config.GetSection("APIConnection:StorageKey").Value!;
         }
 
-		public bool register(RegisterRequest user)
-		{
-			var response = _api.PostData(user, "Account/registerNewUser");
+        public bool register(RegisterRequest user)
+        {
+            var response = _api.PostData(user, "Account/registerNewUser");
 
-			if (!response.IsSuccessStatusCode)
-			{
-				return false;
-			}
+            if (!response.IsSuccessStatusCode)
+            {
+                return false;
+            }
 
-			return true;
-		}
+            return true;
+        }
 
         public async Task<bool> login(UserDTO user)
         {
@@ -63,12 +63,12 @@ namespace BlazorServerBlog.Services
             _api.BlankClientHeaders();
             await localStorage.RemoveItemAsync(authTokenStorageKey);
 
-			await ((AuthStateProvider)authStateProvider).NotifyUserLogout();
-		}
+            await ((AuthStateProvider)authStateProvider).NotifyUserLogout();
+        }
 
         public async Task<string> GetUserNameFromToken()
         {
-			var token = await localStorage.GetItemAsync<string>(authTokenStorageKey);
+            var token = await localStorage.GetItemAsync<string>(authTokenStorageKey);
 
             if (token == null)
             {
@@ -78,6 +78,6 @@ namespace BlazorServerBlog.Services
             var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
             string user = jwt.Claims.First(x => x.Type == "unique_name").Value;
             return user;
-		}
+        }
     }
 }

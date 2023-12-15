@@ -1,12 +1,9 @@
 ﻿using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components.Authorization;
-using System.Net.Http.Headers;
-using System.Security.Claims;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Mvc;
 using BlazorServerBlog.Services;
+using Microsoft.AspNetCore.Components.Authorization;
+using System.Security.Claims;
 
-    namespace BlazorServerBlog.Authentication
+namespace BlazorServerBlog.Authentication
 {
     public class AuthStateProvider : AuthenticationStateProvider
     {

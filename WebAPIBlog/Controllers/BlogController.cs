@@ -1,123 +1,166 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SharedModels.Entities;
 using System.Security.Claims;
-using System.Security.Principal;
 using WebAPIBlog.Repositories;
 
 namespace WebAPIBlog.Controllers
 {
-	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-	[Route("api/[controller]")]
-	[ApiController]
-	public class BlogController : ControllerBase
-	{
-		private IBlogRepository _repository;
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Route("api/[controller]")]
+    [ApiController]
+    public class BlogController : ControllerBase
+    {
+        private IBlogRepository _repository;
 
-		public BlogController(IBlogRepository repository)
-		{
-			this._repository = repository;
-		}
+        public BlogController(IBlogRepository repository)
+        {
+            this._repository = repository;
+        }
 
-		// GET: api/Blog/GetAll
-		[AllowAnonymous]
-		[HttpGet("GetAll")]
-		public async Task<ActionResult<IEnumerable<Blog>>> GetBlogs()
-		{
-			IEnumerable<Blog> res = await _repository.GetAll();
-			return Ok(res);
-		}
+        // GET: api/Blog/GetAll
+        [AllowAnonymous]
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<IEnumerable<Blog>>> GetBlogs()
+        {
+            IEnumerable<Blog> res = await _repository.GetAll();
+            return Ok(res);
+        }
 
-		// GET: api/Blog/GetBlogViewModel/{blogId}
-		[AllowAnonymous]
-		[HttpGet("GetBlogViewModel/{blogId:int}")]
-		public async Task<ActionResult<BlogViewModel>> GetBlogEntries(int blogId)
-		{
-			Blog blog = await _repository.GetBlogById(blogId);
-			List<BlogEntry> entries = await _repository.GetBlogEntriesByBlogId(blogId);
-			List<Comment> comments = await _repository.GetComments(entries);
+        // GET: api/Blog/GetBlogViewModel/{blogId}
+        [AllowAnonymous]
+        [HttpGet("GetBlogViewModel/{blogId:int}")]
+        public async Task<ActionResult<BlogViewModel>> GetBlogEntries(int blogId)
+        {
+            Blog blog = await _repository.GetBlogById(blogId);
+            List<BlogEntry> entries = await _repository.GetBlogEntriesByBlogId(blogId);
+            List<Comment> comments = await _repository.GetComments(entries);
 
-			BlogViewModel viewData = new()
-			{
-				Blog = blog,
-				Comments = comments
-			};
+            BlogViewModel viewData = new()
+            {
+                Blog = blog,
+                Comments = comments
+            };
 
-			// Workaround for passing recursive data into json
-			foreach (BlogEntry entry in entries)
-			{
-				viewData.BlogEntries.Add(CopyBlogEntry(entry));
-			}
+            // Workaround for passing recursive data into json
+            foreach (BlogEntry entry in entries)
+            {
+                viewData.BlogEntries.Add(CopyBlogEntry(entry));
+            }
 
-			return Ok(viewData);
-		}
+            return Ok(viewData);
+        }
 
-		// POST: api/Blog/CreateBlog
-		[HttpPost("CreateBlog")]
-		public async Task<ActionResult<int>> CreateBlog([FromBody] BlogDTO blog)
-		{
-			string userID = GetUserIdFromLoggedInUser();
+        // GET: api/Blog/GetTags
+        [AllowAnonymous]
+        [HttpGet("GetAllTags")]
+        public async Task<ActionResult<IEnumerable<Tag>>> GetAllTags()
+        {
+            IEnumerable<Tag> res = await _repository.GetAllTags();
+            return Ok(res);
+        }
 
-			await _repository.AddBlog(blog, userID);
+        // POST: api/Blog/CreateBlog
+        [HttpPost("CreateBlog")]
+        public async Task<ActionResult<int>> CreateBlog([FromBody] BlogDTO blog)
+        {
+            string userID = GetUserIdFromLoggedInUser();
 
-			Blog newBlog = await _repository.GetBlogByUser(userID);
+            await _repository.AddBlog(blog, userID);
 
-			return Ok(newBlog.BlogId);
-		}
+            Blog newBlog = await _repository.GetBlogByUser(userID);
 
-		// PUT: api/Blog/UpdateBlog
-		[HttpPut("UpdateBlog")]
-		public async Task<ActionResult<Blog>> UpdateBlog([FromBody] BlogDTO blogDTO)
-		{
-			string userID = GetUserIdFromLoggedInUser();
+            return Ok(newBlog.BlogId);
+        }
 
-			Blog blog = await _repository.GetBlogByUser(userID);
+        // PUT: api/Blog/UpdateBlog
+        [HttpPut("UpdateBlog")]
+        public async Task<ActionResult<Blog>> UpdateBlog([FromBody] BlogDTO blogDTO)
+        {
+            string userID = GetUserIdFromLoggedInUser();
 
-			blog.BlogTitle = blogDTO.BlogTitle;
-			blog.Description = blogDTO.Description;
+            Blog blog = await _repository.GetBlogByUser(userID);
 
-			await _repository.UpdateBlog(blog);
+            blog.BlogTitle = blogDTO.BlogTitle;
+            blog.Description = blogDTO.Description;
 
-			return Ok(blog);
-		}
+            await _repository.UpdateBlog(blog);
 
-		// POST: api/Blog/ToggleLock
-		[HttpPost("ToggleLock")]
-		public async Task<ActionResult> ToggleBlogLock()
-		{
-			string userID = GetUserIdFromLoggedInUser();
+            return Ok(blog);
+        }
 
-			await _repository.toggleBlogLock(userID);
+        // POST: api/Blog/ToggleLock
+        [HttpPost("ToggleLock")]
+        public async Task<ActionResult> ToggleBlogLock()
+        {
+            string userID = GetUserIdFromLoggedInUser();
 
-			return Ok();
-		}
+            await _repository.toggleBlogLock(userID);
 
-		private string GetUserIdFromLoggedInUser()
-		{
-			ClaimsIdentity identity = HttpContext.User.Identity as ClaimsIdentity;
-			return identity.Claims.FirstOrDefault(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value; //"NameIdentifier").Value;
-		}
+            return Ok();
+        }
 
-		private BlogEntry CopyBlogEntry(BlogEntry oldEntry)
-		{
-			BlogEntry newEntry = new()
-			{
-				BlogEntryId = oldEntry.BlogEntryId,
-				BlogId = oldEntry.BlogId,
-				EntryTitle = oldEntry.EntryTitle,
-				EntryBody = oldEntry.EntryBody
-			};
+        // GET: api/Blog/DoesUserHaveBlog
+        [HttpGet("DoesUserHaveBlog")]
+        public async Task<bool> DoesUserHaveBlog()
+        {
+            string userID = GetUserIdFromLoggedInUser();
 
-			foreach(Tag t in oldEntry.Tags)
-			{
-				newEntry.Tags.Add(new Tag() { TagId=t.TagId, TagName=t.TagName });
-			}
+            Blog? res = await _repository.GetBlogByUser(userID);
 
-			return newEntry;
-		}
-	
-	}
+            return res != null;
+        }
+
+        // GET: api/Blog/GetBlogIdByUsername/{username}
+        [HttpGet("GetBlogIdByUsername/{username}")]
+        public async Task<ActionResult<int>> GetBlogIdByUsername([FromRoute]string username)
+        {
+            IdentityUser user = await _repository.GetUserByUsername(username);
+
+            if (user == null)
+            {
+                return Ok(-1);
+            }
+
+            Blog blog = await _repository.GetBlogByUser(user.Id);
+
+            if (blog == null)
+            {
+                return Ok(-2);
+            }
+
+            return Ok(blog.BlogId);
+        }
+
+
+        // Helpers:
+
+        private string GetUserIdFromLoggedInUser()
+        {
+            ClaimsIdentity identity = HttpContext.User.Identity as ClaimsIdentity;
+            return identity.Claims.FirstOrDefault(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value; //"NameIdentifier").Value;
+        }
+
+        private BlogEntry CopyBlogEntry(BlogEntry oldEntry)
+        {
+            BlogEntry newEntry = new()
+            {
+                BlogEntryId = oldEntry.BlogEntryId,
+                BlogId = oldEntry.BlogId,
+                EntryTitle = oldEntry.EntryTitle,
+                EntryBody = oldEntry.EntryBody
+            };
+
+            foreach (Tag t in oldEntry.Tags)
+            {
+                newEntry.Tags.Add(new Tag() { TagId = t.TagId, TagName = t.TagName });
+            }
+
+            return newEntry;
+        }
+
+    }
 }
 

@@ -1,5 +1,7 @@
 ﻿@page "/ViewBlog/{blogIdinput}"
+@using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager NavigationManager
+@implements IAsyncDisposable
 @inject IAuthenticationService AuthService
 @inject IBlogService BlogService
 @inject IBlogEntryService BlogEntryService
@@ -65,7 +67,7 @@
 				<br />
 				<div class="form-group">
 					<label>(Valgfritt)</label>
-					<label>Tags, Begynn hver tag med #, separer med komma + mellomrom (f.eks "#mat, #verktøy")</label>
+					<label>Tags, Begynn hver tag med #, separer med mellomrom (f.eks "#mat #verktøy")</label>
 					<InputText @bind-Value="newEntry.TagsString" class="form-control" />
 					<ValidationMessage For="@(() => newEntry.TagsString)" />
 				</div>
@@ -133,9 +135,15 @@
 											</div>
 											<div class="form-group">
 												<label>Rediger Post Innhold</label>
-												<InputText @bind-Value="editingEntry.EntryBody" class="form-control" />
+												<InputTextArea @bind-Value="editingEntry.EntryBody" class="form-control" />
 												<ValidationMessage For="@(() => editingEntry.EntryBody)" />
 											</div>
+											<div class="form-group">
+												<label>Tags, Begynn hver tag med #, separer med mellomrom (f.eks "#mat #verktøy")</label>
+												<InputText @bind-Value="editingEntry.TagsString" class="form-control" />
+												<ValidationMessage For="@(() => newEntry.TagsString)" />
+											</div>
+											<input type="hidden" @bind-value="editingEntry.BlogEntryId">
 											<button disabled="@loading" class="btn btn-primary">
 												Post!
 											</button>
@@ -246,17 +254,65 @@
 	public int editingEntryId { get; set; } = -1;
 	public int editingCommentId { get; set; } = -1;
 
-	BlogEntry editingEntry { get; set; } = new();
+	BlogEntryDTO editingEntry { get; set; } = new();
 	Comment editingComment { get; set; } = new();
+
+	// SignalR
+	private HubConnection? hubConnection;
+	private bool messageInput = true;
 
 	protected async override Task OnInitializedAsync()
 	{
 		blogId = Int32.Parse(blogIdinput);
 		loggedInUserName = await AuthService.GetUserNameFromToken();
 		Model = await BlogService.GetBlogEntries(blogId);
+
+		hubConnection = new HubConnectionBuilder()
+			.WithUrl(NavigationManager.ToAbsoluteUri("/bloghub"))
+			.Build();
+
+		hubConnection.On<bool>("ReceiveMessage", (message) =>
+		{
+
+			InvokeAsync(ReloadModel);
+
+			InvokeAsync(StateHasChanged);
+		});
+
+		await hubConnection.StartAsync();
+
 		loading = false;
 	}
 
+	//SignalR
+	private async Task SignalRUpdate()
+	{
+		if (hubConnection is not null)
+		{
+			await hubConnection.SendAsync("SendMessage", messageInput);
+		}
+	}
+
+	public bool IsConnected =>
+		hubConnection?.State == HubConnectionState.Connected;
+
+	public async ValueTask DisposeAsync()
+	{
+		if (hubConnection is not null)
+		{
+			await hubConnection.DisposeAsync();
+		}
+	}
+
+	public async Task ReloadModel()
+	{
+		loading = true;
+		Model = await BlogService.GetBlogEntries(blogId);
+		loading = false;
+	}
+
+
+	// CRUD operations
 	public void CreateBlogEntry()
 	{
 		newEntry = new();
@@ -280,6 +336,11 @@
 			EntryTitle = entry.EntryTitle,
 			EntryBody = entry.EntryBody
 		};
+
+		foreach(Tag t in entry.Tags)
+		{
+			editingEntry.TagsString = editingEntry.TagsString + (t.TagName) + " ";
+		}
 
 		editingEntryId = entry.BlogEntryId;
 		StateHasChanged();
@@ -336,11 +397,12 @@
 	}
 
 
-	public void ToggleBlogLock()
+	public async void ToggleBlogLock()
 	{
 		if (BlogService.ToggleBlogLock())
 		{
 			Model.Blog.Locked = !Model.Blog.Locked;
+			await SignalRUpdate();
 			StateHasChanged();
 		}
 	}
@@ -356,10 +418,9 @@
 			error = "Create Entry failed";
 		}
 		creatingNewEntry = false;
-		
-		loading = true;
-		Model = await BlogService.GetBlogEntries(blogId);
-		loading = false;
+
+		await SignalRUpdate();
+		await ReloadModel();
 		StateHasChanged();
 	}
 
@@ -375,9 +436,8 @@
 		}
 		newCommentEntryId = -1;
 
-		loading = true;
-		Model = await BlogService.GetBlogEntries(blogId);
-		loading = false;
+		await SignalRUpdate();
+		await ReloadModel();
 		StateHasChanged();
 	}
 
@@ -393,6 +453,8 @@
 			error = "Edit Entry failed";
 		}
 		editingEntryId = -1;
+		await SignalRUpdate();
+		await ReloadModel();
 		StateHasChanged();
 	}
 
@@ -409,9 +471,8 @@
 		}
 		editingCommentId = -1;
 
-		loading = true;
-		Model = await BlogService.GetBlogEntries(blogId);
-		loading = false;
+		await SignalRUpdate();
+		await ReloadModel();
 		StateHasChanged();
 	}
 }
