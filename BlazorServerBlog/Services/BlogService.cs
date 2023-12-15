@@ -37,8 +37,8 @@ namespace BlazorServerBlog.Services
 
             return result;
         }
-
-        public async Task<int> CreateBlog(BlogDTO blog)
+		
+		public async Task<int> CreateBlog(BlogDTO blog)
         {
             var response = api.PostData<BlogDTO>(blog, "Blog/CreateBlog");
 
@@ -90,6 +90,20 @@ namespace BlazorServerBlog.Services
             }
 
             bool result = await response.Content.ReadFromJsonAsync<bool>();
+
+            return result;
+        }
+
+        public async Task<int> GetBlogIdByUsername(string username)
+        {
+            var response = api.GetData("Blog/GetBlogIdByUsername/" + username);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception("Error fetching user blog");
+            }
+
+            int result = await response.Content.ReadFromJsonAsync<int>();
 
             return result;
         }

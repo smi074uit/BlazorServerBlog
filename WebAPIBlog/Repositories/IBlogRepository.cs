@@ -26,5 +26,7 @@ namespace WebAPIBlog.Repositories
         Task AddTagIfNewTag(string tag);
         Task AddTagsToEntry(BlogEntry entry, List<string> tags);
         Task<IEnumerable<Tag>> GetAllTags();
+		Task<IEnumerable<BlogEntry>> GetBlogEntriesByTagId(int tagId);
+        Task<IdentityUser> GetUserByUsername(string username);
     }
 }

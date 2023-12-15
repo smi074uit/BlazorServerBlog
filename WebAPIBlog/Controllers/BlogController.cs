@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SharedModels.Entities;
 using System.Security.Claims;
@@ -111,6 +112,28 @@ namespace WebAPIBlog.Controllers
 
             return res != null;
         }
+
+        // GET: api/Blog/GetBlogIdByUsername/{username}
+        [HttpGet("GetBlogIdByUsername/{username}")]
+        public async Task<ActionResult<int>> GetBlogIdByUsername([FromRoute]string username)
+        {
+            IdentityUser user = await _repository.GetUserByUsername(username);
+
+            if (user == null)
+            {
+                return Ok(-1);
+            }
+
+            Blog blog = await _repository.GetBlogByUser(user.Id);
+
+            if (blog == null)
+            {
+                return Ok(-2);
+            }
+
+            return Ok(blog.BlogId);
+        }
+
 
         // Helpers:
 

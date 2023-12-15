@@ -1,6 +1,8 @@
 ﻿@inherits LayoutComponentBase
 @using Blazored.Typeahead
 @inject IMainLayoutService MainService
+@inject IBlogService BlogService
+@inject NavigationManager NavigationManager
 
 <PageTitle>BlazorServerBlog</PageTitle>
 
@@ -10,24 +12,55 @@
     </div>
 
     <main>
+        @if(!loading){
         <div class="top-row px-4">
-           @*  @if (!toggleSearchUsers)
+            @if (!toggleSearchUsers)
             {
-                <a href="" onclick="@(()=>ToggleSearch())" @onclick:preventDefault>Search users</a>
-            <BlazoredTypeahead SearchMethod="searchTags" @bind-Value="selectedTag">
-                <SelectedTemplate>
-                    @context.TagName
-                </SelectedTemplate>
-                <ResultTemplate>@context.TagName</ResultTemplate>
+                <label>Searching in tags</label>
 
-            </BlazoredTypeahead>
+                    <BlazoredTypeahead SearchMethod="searchTags"
+                                       TValue="Tag"
+                                       TItem="Tag"
+                                       Value="selectedTag"
+                                       ValueChanged="SelectedTagChanged"
+                                       ValueExpression="@(() => selectedTag)"
+                                       placeholder="Search by tag...">
+                    <SelectedTemplate>
+                        @context.TagName
+                    </SelectedTemplate>
+                    <ResultTemplate>@context.TagName</ResultTemplate>
+
+                </BlazoredTypeahead>
+                    <a href="" onclick="@(()=>ToggleSearch())" @onclick:preventDefault>Switch to searching for users</a>
             }
             @if (toggleSearchUsers)
             {
-                <a href="" onclick="@(()=>ToggleSearch())" @onclick:preventDefault>Search tags</a>
-            } *@
-            
+                    <label>Searching in users</label>
+
+                    <BlazoredTypeahead SearchMethod="searchUsers"
+                                       TValue="string"
+                                       TItem="string"
+                                       Value="selectedUser"
+                                       ValueChanged="SelectedUserChanged"
+                                       ValueExpression="@(() => selectedUser)"
+                                       placeholder="Search by user...">
+                        <SelectedTemplate>
+                            @context
+                        </SelectedTemplate>
+                        <ResultTemplate>@context</ResultTemplate>
+
+                    </BlazoredTypeahead>
+                    <a href="" onclick="@(()=>ToggleSearch())" @onclick:preventDefault>Switch to searching for tags</a>
+            }
+
         </div>
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <h2>ERROR: @error</h2>
+            }
+        }
+
+        
 
         <article class="content px-4">
             @Body
@@ -43,6 +76,7 @@
 
     Tag selectedTag = new();
     string selectedUser = "";
+    string error = "";
 
 
     protected async override Task OnInitializedAsync()
@@ -59,9 +93,44 @@
         StateHasChanged();
     }
 
+    public void SelectedTagChanged(Tag result)
+    {
+        selectedTag = result;
+        NavigationManager.NavigateTo("/TagSearch/" + selectedTag.TagId.ToString());
+    }
+
+    public async void SelectedUserChanged(string result)
+    {
+        error = "";
+
+        selectedUser = result;
+
+        int selectedUsersBlogId = await BlogService.GetBlogIdByUsername(selectedUser);
+
+        if (selectedUsersBlogId > 0)
+        {
+            NavigationManager.NavigateTo("/ViewBlog/" + selectedUsersBlogId.ToString(), forceLoad:true);
+            StateHasChanged();
+        }
+        if (selectedUsersBlogId == -1)
+        {
+            error = "User does not exist";
+        }
+        if (selectedUsersBlogId == -2)
+        {
+            error = "That user does not have a blog";
+        }
+
+    }
+
     private async Task <IEnumerable<Tag>> searchTags(string searchtext)
     {
         return await Task.FromResult(tagsList.Where(x => x.TagName.ToLower().Contains(searchtext.ToLower())).ToList());
+    }
+
+    private async Task<IEnumerable<string>> searchUsers(string searchtext)
+    {
+        return await Task.FromResult(usernameList.Where(x => x.ToLower().Contains(searchtext.ToLower())).ToList());
     }
 
 }

@@ -108,8 +108,7 @@ namespace BlazorServerBlog.Services
             return true;
         }
 
-        // DELETE: api/BlogEntry/DeleteComment/{commentId}
-        [HttpDelete("DeleteComment/{commentId}")]
+
         public async Task<bool> DeleteComment(int commentId)
         {
             var response = api.DeleteData("BlogEntry/DeleteComment/" + commentId.ToString());
@@ -121,5 +120,19 @@ namespace BlazorServerBlog.Services
 
             return true;
         }
-    }
+
+		public async Task<IEnumerable<BlogEntry>> GetBlogEntriesFromTagId(int tagId)
+		{
+			var response = api.GetData("BlogEntry/GetEntriesByTag/" + tagId.ToString());
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return null;
+			}
+
+			IEnumerable<BlogEntry> result = await response.Content.ReadFromJsonAsync<IEnumerable<BlogEntry>>();
+
+			return result;
+		}
+	}
 }

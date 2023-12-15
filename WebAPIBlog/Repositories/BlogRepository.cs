@@ -237,5 +237,24 @@ namespace WebAPIBlog.Repositories
             List<Tag> tags = _db.Tag.ToList();
             return tags;
         }
-    }
+
+        public async Task<IEnumerable<BlogEntry>> GetBlogEntriesByTagId(int tagId)
+        {
+			IQueryable<BlogEntry> entries = _db.Tag
+                .Where(t => t.TagId == tagId)
+                .SelectMany(t=>t.Entries)
+                .Include(t=>t.Tags);
+
+			List<BlogEntry> res = entries.ToList();
+            return res;
+		}
+
+        public async Task<IdentityUser> GetUserByUsername(string username)
+        {
+            IdentityUser user = await _userManager.FindByNameAsync(username);
+
+            return user;
+        }
+
+	}
 }

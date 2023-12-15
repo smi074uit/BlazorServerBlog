@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAPIBlog", "WebAPIBlog\We
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedModels", "SharedModels\SharedModels.csproj", "{629B760C-3414-47ED-8F99-3792845D8C89}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorServerBlogUnitTest", "BlazorServerBlogUnitTest\BlazorServerBlogUnitTest.csproj", "{6956758F-7063-4770-A380-BD6DE57DEFE8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorServerBlogUnitTest", "BlazorServerBlogUnitTest\BlazorServerBlogUnitTest.csproj", "{6956758F-7063-4770-A380-BD6DE57DEFE8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

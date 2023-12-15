@@ -144,7 +144,7 @@ namespace WebAPIBlog.Controllers
         }
 
         // DELETE: api/BlogEntry/DeleteEntry/{entryId}
-        [HttpDelete("DeleteEntry/{entryId}")]
+        [HttpDelete("DeleteEntry/{entryId:int}")]
         public async Task<ActionResult> DeleteEntry([FromRoute] int entryId)
         {
             BlogEntry entry = await _repository.GetBlogEntryById(entryId);
@@ -163,7 +163,7 @@ namespace WebAPIBlog.Controllers
         }
 
         // DELETE: api/BlogEntry/DeleteComment/{commentId}
-        [HttpDelete("DeleteComment/{commentId}")]
+        [HttpDelete("DeleteComment/{commentId:int}")]
         public async Task<ActionResult> DeleteComment([FromRoute] int commentId)
         {
             Comment c = await _repository.GetCommentById(commentId);
@@ -178,6 +178,22 @@ namespace WebAPIBlog.Controllers
             await _repository.DeleteCommentById(commentId);
 
             return Ok();
+		}
+
+        // GET: api/BlogEntry/GetEntriesByTag/{tagId}
+        [HttpGet("GetEntriesByTag/{tagId:int}")]
+        public async Task<ActionResult<IEnumerable<BlogEntry>>> GetEntriesByTag([FromRoute] int tagId)
+        {
+            var dbentries = await _repository.GetBlogEntriesByTagId(tagId);
+
+            // Workaround for passing recursive data into json
+            List<BlogEntry> entries = new();
+			foreach ( BlogEntry e in dbentries)
+            {
+                entries.Add(CopyBlogEntry(e));
+            }
+
+            return Ok(entries);
         }
 
         // Helpers:
