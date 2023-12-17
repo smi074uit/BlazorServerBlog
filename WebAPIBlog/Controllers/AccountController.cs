@@ -64,7 +64,17 @@ namespace WebAPIBlog.Controllers
         [Route("registerNewUser")]
         public async Task<IActionResult> RegisterNewUser(RegisterRequest registerRequest)
         {
-            // TODO Validate
+            if(!(registerRequest == null)) {
+                if(registerRequest.Username == null || 3 < registerRequest.Username.Length || registerRequest.Username.Length < 50 )
+                {
+                    return BadRequest("username not valid");
+                }
+                if(registerRequest.Password == null || 6 < registerRequest.Password.Length || registerRequest.Password.Length < 50)
+                {
+                    return BadRequest("password not valid");
+                }
+
+			}
 
             User res = await _repo.AddUser(registerRequest);
 

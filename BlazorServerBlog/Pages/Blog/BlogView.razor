@@ -39,44 +39,47 @@
 			</div>
 		</div>
 
-		<br />
-		@if (!creatingNewEntry)
+		@if (!Model.Blog.Locked)
 		{
-		<p>
-			<a href="" onclick="@(()=>CreateBlogEntry())" @onclick:preventDefault>Ny Blog Post</a>
-		</p>
-		}
-		@if (creatingNewEntry)
-		{
-			
-			<EditForm Model="@newEntry" OnValidSubmit="OnValidSubmitNewEntry">
-				<DataAnnotationsValidator />
-				<div class="form-group">
-					<label>(Påkrevd)</label>
-					<label>Ny Post Tittel</label>
-					<InputText @bind-Value="newEntry.EntryTitle" class="form-control" />
-					<ValidationMessage For="@(() => newEntry.EntryTitle)" />
-				</div>
-				<br />
-				<div class="form-group">
-					<label>(Påkrevd)</label>
-					<label>Ny Post innhold</label>
-					<InputTextArea @bind-Value="newEntry.EntryBody" class="form-control" />
-					<ValidationMessage For="@(() => newEntry.EntryBody)" />
-				</div>
-				<br />
-				<div class="form-group">
-					<label>(Valgfritt)</label>
-					<label>Tags, Begynn hver tag med #, separer med mellomrom (f.eks "#mat #verktøy")</label>
-					<InputText @bind-Value="newEntry.TagsString" class="form-control" />
-					<ValidationMessage For="@(() => newEntry.TagsString)" />
-				</div>
-				<button disabled="@loading" class="btn btn-primary">
-					Post!
-				</button>
-				<a href="" onclick="@(()=>ResetNewBlogEntry())" class="btn btn-link" @onclick:preventDefault>Avbryt</a>
-			</EditForm>
 			<br />
+			@if (!creatingNewEntry)
+			{
+				<p>
+					<a href="" onclick="@(()=>CreateBlogEntry())" @onclick:preventDefault>Ny Blog Post</a>
+				</p>
+			}
+			@if (creatingNewEntry)
+			{
+
+				<EditForm Model="@newEntry" OnValidSubmit="OnValidSubmitNewEntry">
+					<DataAnnotationsValidator />
+					<div class="form-group">
+						<label>(Påkrevd)</label>
+						<label>Ny Post Tittel</label>
+						<InputText @bind-Value="newEntry.EntryTitle" class="form-control" />
+						<ValidationMessage For="@(() => newEntry.EntryTitle)" />
+					</div>
+					<br />
+					<div class="form-group">
+						<label>(Påkrevd)</label>
+						<label>Ny Post innhold</label>
+						<InputTextArea @bind-Value="newEntry.EntryBody" class="form-control" />
+						<ValidationMessage For="@(() => newEntry.EntryBody)" />
+					</div>
+					<br />
+					<div class="form-group">
+						<label>(Valgfritt)</label>
+						<label>Tags, Begynn hver tag med #, separer med mellomrom (f.eks "#mat #verktøy")</label>
+						<InputText @bind-Value="newEntry.TagsString" class="form-control" />
+						<ValidationMessage For="@(() => newEntry.TagsString)" />
+					</div>
+					<button disabled="@loading" class="btn btn-primary">
+						Post!
+					</button>
+					<a href="" onclick="@(()=>ResetNewBlogEntry())" class="btn btn-link" @onclick:preventDefault>Avbryt</a>
+				</EditForm>
+				<br />
+			}
 		}
 	}
 
@@ -190,6 +193,10 @@
 							<td>
 								<div class="card" style="background-color:green">
 									@c.Owner.UserName
+									@if (c.Owner.UserName == loggedInUserName)
+									{
+										<p> (deg)</p>
+									}
 									<br />
 									<br />
 									<div class="card-body" style="background-color:darkgreen">
